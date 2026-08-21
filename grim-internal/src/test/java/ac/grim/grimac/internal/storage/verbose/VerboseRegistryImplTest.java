@@ -7,6 +7,7 @@ import ac.grim.grimac.api.storage.category.Category;
 import ac.grim.grimac.api.storage.check.CheckCatalogPersistence;
 import ac.grim.grimac.api.storage.check.CheckCatalogRow;
 import ac.grim.grimac.api.storage.kind.Operation;
+import ac.grim.grimac.api.storage.kind.ops.EntityOps;
 import ac.grim.grimac.api.storage.model.VerboseSchemaRecord;
 import ac.grim.grimac.api.storage.query.DeleteCriteria;
 import ac.grim.grimac.api.storage.query.Page;
@@ -19,13 +20,18 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -74,6 +80,101 @@ class VerboseRegistryImplTest {
         assertNotNull(layout);
         assertEquals(schema.fields(), layout.fields());
         assertEquals(2, store.executeCalls());
+    }
+
+    @Test
+    void repeatedCheckIdVersionsOnlyInternsNewSchemas() {
+        RegistrationStore store = new RegistrationStore();
+        CheckRegistry checks = writableChecks();
+        VerboseRegistryImpl registry = new VerboseRegistryImpl(store, checks, 1);
+        Verbose first = Verbose.of("first={uint}");
+
+        registry.registerTemplate("grim:first", "First", null, null, first);
+        int firstId = checks.getId("grim:first").orElseThrow();
+
+        assertEquals(Map.of(firstId, first.version()), registry.checkIdVersions(checks));
+        assertEquals(Map.of(firstId, first.version()), registry.checkIdVersions(checks));
+        assertEquals(1, store.getByIdCalls());
+        assertEquals(1, store.upsertCalls());
+
+        Verbose second = Verbose.of("second={bool}");
+        registry.registerTemplate("grim:second", "Second", null, null, second);
+        int secondId = checks.getId("grim:second").orElseThrow();
+
+        assertEquals(
+                Map.of(firstId, first.version(), secondId, second.version()),
+                registry.checkIdVersions(checks));
+        assertEquals(2, store.getByIdCalls());
+        assertEquals(2, store.upsertCalls());
+    }
+
+    @Test
+    void checkIdVersionsRetriesUntilInterningCompletes() {
+        RegistrationStore store = new RegistrationStore(1, 1);
+        CheckRegistry checks = writableChecks();
+        VerboseRegistryImpl registry = new VerboseRegistryImpl(store, checks, 1);
+        Verbose verbose = Verbose.of("value={uint}");
+
+        registry.registerTemplate("grim:retry", "Retry", null, null, verbose);
+        int checkId = checks.getId("grim:retry").orElseThrow();
+
+        assertEquals(1, store.getByIdCalls());
+        assertEquals(0, store.upsertCalls());
+        assertEquals(Map.of(checkId, verbose.version()), registry.checkIdVersions(checks));
+        assertEquals(2, store.getByIdCalls());
+        assertEquals(1, store.upsertCalls());
+
+        assertEquals(Map.of(checkId, verbose.version()), registry.checkIdVersions(checks));
+        assertEquals(3, store.getByIdCalls());
+        assertEquals(2, store.upsertCalls());
+
+        assertEquals(Map.of(checkId, verbose.version()), registry.checkIdVersions(checks));
+        assertEquals(3, store.getByIdCalls());
+        assertEquals(2, store.upsertCalls());
+    }
+
+    @Test
+    void registerAfterTemplatePreservesTemplateLayoutResolution() {
+        String stableKey = "grim:mixed-registration";
+        RegistrationStore store = new RegistrationStore();
+        CheckRegistry checks = writableChecks();
+        VerboseRegistryImpl registry = new VerboseRegistryImpl(store, checks, 1);
+        Verbose verbose = Verbose.of("value={uint}");
+
+        registry.registerTemplate(stableKey, "MixedRegistration", null, null, verbose);
+        int checkId = checks.getId(stableKey).orElseThrow();
+        assertArrayEquals(verbose.layoutBytes(), store.record().layout());
+
+        registry.register(stableKey, verbose.schema());
+        int lookupsAfterRegistration = store.getByIdCalls();
+
+        assertEquals(1, store.upsertCalls());
+        assertArrayEquals(verbose.layoutBytes(), store.record().layout());
+        assertEquals(Map.of(checkId, verbose.version()), registry.checkIdVersions(checks));
+        assertEquals(Map.of(checkId, verbose.version()), registry.checkIdVersions(checks));
+        assertEquals(lookupsAfterRegistration, store.getByIdCalls());
+        assertEquals(1, store.upsertCalls());
+    }
+
+    @Test
+    void registerAfterTemplateDoesNotHideDifferentSameVersionSchema() {
+        String stableKey = "grim:mixed-registration-conflict";
+        RegistrationStore store = new RegistrationStore();
+        CheckRegistry checks = writableChecks();
+        VerboseRegistryImpl registry = new VerboseRegistryImpl(store, checks, 1);
+        Verbose verbose = Verbose.of("value={uint}");
+        VerboseSchema replacement = VerboseSchema.of(verbose.version(), "changed:bool");
+
+        registry.registerTemplate(stableKey, "MixedRegistrationConflict", null, null, verbose);
+        int checkId = checks.getId(stableKey).orElseThrow();
+
+        registry.register(stableKey, replacement);
+
+        assertEquals(2, store.getByIdCalls());
+        assertEquals(1, store.upsertCalls());
+        assertArrayEquals(verbose.layoutBytes(), store.record().layout());
+        assertEquals(Map.of(checkId, replacement.version()), registry.checkIdVersions(checks));
+        assertEquals(3, store.getByIdCalls());
     }
 
     private static @NotNull CheckRegistry emptyChecks() {
@@ -149,7 +250,7 @@ class VerboseRegistryImplTest {
         }
     }
 
-    private static final class RegistrationStore implements DataStore {
+    private abstract static class StubDataStore implements DataStore {
         @Override
         public <E> void submit(@NotNull Category<E> cat, @NotNull Consumer<E> configurer) {
             throw new UnsupportedOperationException();
@@ -159,12 +260,6 @@ class VerboseRegistryImplTest {
         @SuppressWarnings("removal")
         public @NotNull <R> CompletionStage<Page<R>> query(@NotNull Category<?> cat, @NotNull Query<R> query) {
             throw new UnsupportedOperationException();
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public @NotNull <R> CompletionStage<R> execute(@NotNull Operation<R> op) {
-            return (CompletionStage<R>) CompletableFuture.completedFuture(Optional.empty());
         }
 
         @Override
@@ -202,7 +297,59 @@ class VerboseRegistryImplTest {
         }
     }
 
-    private static final class FlakyStore implements DataStore {
+    private static final class RegistrationStore extends StubDataStore {
+        private final int getFailures;
+        private final int upsertFailures;
+        private final AtomicInteger getByIdCalls = new AtomicInteger();
+        private final AtomicInteger upsertCalls = new AtomicInteger();
+        private final ConcurrentMap<String, VerboseSchemaRecord> records = new ConcurrentHashMap<>();
+        private final AtomicReference<VerboseSchemaRecord> record = new AtomicReference<>();
+
+        private RegistrationStore() {
+            this(0, 0);
+        }
+
+        private RegistrationStore(int getFailures, int upsertFailures) {
+            this.getFailures = getFailures;
+            this.upsertFailures = upsertFailures;
+        }
+
+        private int getByIdCalls() {
+            return getByIdCalls.get();
+        }
+
+        private int upsertCalls() {
+            return upsertCalls.get();
+        }
+
+        private @NotNull VerboseSchemaRecord record() {
+            return record.get();
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public @NotNull <R> CompletionStage<R> execute(@NotNull Operation<R> op) {
+            if (op instanceof EntityOps.GetByIdOp<?, ?> getById) {
+                if (getByIdCalls.incrementAndGet() <= getFailures) {
+                    throw new RuntimeException("transient");
+                }
+                return (CompletionStage<R>) CompletableFuture.completedFuture(
+                        Optional.ofNullable(records.get((String) getById.id())));
+            }
+            if (op instanceof EntityOps.UpsertOp<?> upsert) {
+                if (upsertCalls.incrementAndGet() <= upsertFailures) {
+                    throw new RuntimeException("transient");
+                }
+                VerboseSchemaRecord persisted = (VerboseSchemaRecord) upsert.record();
+                records.put(persisted.schemaKey(), persisted);
+                record.set(persisted);
+                return (CompletionStage<R>) CompletableFuture.completedFuture(null);
+            }
+            throw new UnsupportedOperationException(op.getClass().getName());
+        }
+    }
+
+    private static final class FlakyStore extends StubDataStore {
         private final VerboseSchemaRecord record;
         private final AtomicInteger executeCalls = new AtomicInteger();
 
@@ -215,57 +362,12 @@ class VerboseRegistryImplTest {
         }
 
         @Override
-        public <E> void submit(@NotNull Category<E> cat, @NotNull Consumer<E> configurer) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        @SuppressWarnings("removal")
-        public @NotNull <R> CompletionStage<Page<R>> query(@NotNull Category<?> cat, @NotNull Query<R> query) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         @SuppressWarnings("unchecked")
         public @NotNull <R> CompletionStage<R> execute(@NotNull Operation<R> op) {
             if (executeCalls.incrementAndGet() == 1) {
                 throw new RuntimeException("transient");
             }
             return (CompletionStage<R>) CompletableFuture.completedFuture(Optional.of(record));
-        }
-
-        @Override
-        public @NotNull <E> CompletionStage<Void> delete(@NotNull Category<E> cat, @NotNull DeleteCriteria criteria) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public @NotNull CompletionStage<DeletionReport> forgetPlayer(@NotNull UUID uuid) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public @NotNull CompletionStage<Long> countViolationsInSession(@NotNull UUID sessionId) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public @NotNull CompletionStage<Long> countUniqueChecksInSession(@NotNull UUID sessionId) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public @NotNull CompletionStage<Long> countSessionsByPlayer(@NotNull UUID player) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public @NotNull DataStoreMetrics metrics() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void flushAndClose(long drainTimeoutMs) {
         }
     }
 }
