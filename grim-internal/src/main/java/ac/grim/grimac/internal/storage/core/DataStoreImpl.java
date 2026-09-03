@@ -543,6 +543,11 @@ public final class DataStoreImpl implements DataStore {
         return metrics;
     }
 
+    /** Waits for queued writes to reach their backends without closing anything. Returns the events still queued. */
+    public int drain(long timeoutMs) {
+        return closed ? 0 : rings.awaitDrain(timeoutMs);
+    }
+
     @Override
     public synchronized void flushAndClose(long drainTimeoutMs) {
         if (closed) return;
