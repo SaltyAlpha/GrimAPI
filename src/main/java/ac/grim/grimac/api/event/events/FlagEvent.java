@@ -3,6 +3,7 @@ package ac.grim.grimac.api.event.events;
 import ac.grim.grimac.api.AbstractCheck;
 import ac.grim.grimac.api.GrimUser;
 import ac.grim.grimac.api.event.EventChannel;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,7 @@ public class FlagEvent extends GrimVerboseCheckEvent<FlagEvent.Channel> {
      * {@code true} cancels, {@code false} leaves uncancelled. The last
      * parameter carries the cancelled state threaded through priority-ordered
      * dispatch; a handler registered with {@code ignoreCancelled = true}
-     * still runs when a higher-priority handler already cancelled the event.
+     * still runs when a lower-priority handler already cancelled the event.
      *
      */
     @FunctionalInterface
@@ -65,7 +66,7 @@ public class FlagEvent extends GrimVerboseCheckEvent<FlagEvent.Channel> {
         }
 
         public void onFlagSupplier(@NotNull GrimPlugin plugin, @NotNull SupplierHandler handler) {
-            subscribe(handler, 0, false, plugin, null);
+            subscribe(handler, ListenerPriority.NORMAL, false, plugin, null);
         }
 
         public void onFlagSupplier(@NotNull GrimPlugin plugin, @NotNull SupplierHandler handler, int priority) {

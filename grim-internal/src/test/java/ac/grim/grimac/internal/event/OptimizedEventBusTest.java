@@ -4,6 +4,7 @@ import ac.grim.grimac.api.event.EventChannel;
 import ac.grim.grimac.api.event.GrimEvent;
 import ac.grim.grimac.api.event.GrimEventHandler;
 import ac.grim.grimac.api.event.GrimEventListener;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.BasicGrimPlugin;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import ac.grim.grimac.internal.plugin.resolver.GrimExtensionManager;
@@ -44,7 +45,8 @@ class OptimizedEventBusTest {
 
             public Channel() { super(AddonEvent.class, Handler.class); }
 
-            public void onAddon(@NotNull Handler h) { subscribe(h, 0, false, null, null); }
+            public void onAddon(@NotNull Handler h) { subscribe(h, ListenerPriority.NORMAL, false, null, null); }
+            public void onAddon(@NotNull Handler h, int priority) { subscribe(h, priority, false, null, null); }
 
             public void fire(int value) {
                 Entry<Handler>[] entries = entries();
@@ -79,6 +81,34 @@ class OptimizedEventBusTest {
         @GrimEventHandler(priority = 5)
         public void onAddon(AddonEvent event) {
             seen.add(event.getValue());
+        }
+    }
+
+    public static class OrderedReflectiveListener {
+        private final List<String> order;
+        private final String name;
+
+        OrderedReflectiveListener(List<String> order, String name) {
+            this.order = order;
+            this.name = name;
+        }
+
+        @GrimEventHandler
+        public void onAddon(AddonEvent event) {
+            order.add(name);
+        }
+    }
+
+    public static class MaxPriorityReflectiveListener {
+        private final List<String> order;
+
+        MaxPriorityReflectiveListener(List<String> order) {
+            this.order = order;
+        }
+
+        @GrimEventHandler(priority = Integer.MAX_VALUE)
+        public void onAddon(AddonEvent event) {
+            order.add("max");
         }
     }
 
@@ -141,6 +171,31 @@ class OptimizedEventBusTest {
         assertEquals(99, seen.get());
     }
 
+    @Test
+    void omittedLegacyPriorityDefaultsToNormal() {
+        AddonEvent.Channel channel = bus.get(AddonEvent.class);
+        List<String> order = new ArrayList<>();
+        channel.onAddon(value -> order.add("high"), ListenerPriority.HIGH);
+        bus.subscribe(plugin, AddonEvent.class, event -> order.add("default"));
+        channel.onAddon(value -> order.add("low"), ListenerPriority.LOW);
+
+        channel.fire(1);
+
+        assertEquals(List.of("low", "default", "high"), order);
+    }
+
+    @Test
+    void maxValueLegacyPriorityRunsBeforeMonitor() {
+        AddonEvent.Channel channel = bus.get(AddonEvent.class);
+        List<String> order = new ArrayList<>();
+        bus.subscribe(plugin, AddonEvent.class, event -> order.add("monitor"), ListenerPriority.MONITOR, false);
+        bus.subscribe(plugin, AddonEvent.class, event -> order.add("max"), Integer.MAX_VALUE, false);
+
+        channel.fire(1);
+
+        assertEquals(List.of("max", "monitor"), order);
+    }
+
     // ── Reflective registration ───────────────────────────────────────────
 
     @Test
@@ -152,6 +207,31 @@ class OptimizedEventBusTest {
         bus.get(AddonEvent.class).fire(4);
 
         assertEquals(List.of(3, 4), listener.seen);
+    }
+
+    @Test
+    void omittedAnnotatedPriorityDefaultsToNormal() {
+        AddonEvent.Channel channel = bus.get(AddonEvent.class);
+        List<String> order = new ArrayList<>();
+        channel.onAddon(value -> order.add("high"), ListenerPriority.HIGH);
+        bus.registerAnnotatedListeners(plugin, new OrderedReflectiveListener(order, "default"));
+        channel.onAddon(value -> order.add("low"), ListenerPriority.LOW);
+
+        channel.fire(1);
+
+        assertEquals(List.of("low", "default", "high"), order);
+    }
+
+    @Test
+    void maxValueAnnotatedPriorityRunsBeforeMonitor() {
+        AddonEvent.Channel channel = bus.get(AddonEvent.class);
+        List<String> order = new ArrayList<>();
+        channel.onAddon(value -> order.add("monitor"), ListenerPriority.MONITOR);
+        bus.registerAnnotatedListeners(plugin, new MaxPriorityReflectiveListener(order));
+
+        channel.fire(1);
+
+        assertEquals(List.of("max", "monitor"), order);
     }
 
     // ── Unregister ────────────────────────────────────────────────────────

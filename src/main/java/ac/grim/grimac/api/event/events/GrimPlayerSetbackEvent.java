@@ -2,6 +2,7 @@ package ac.grim.grimac.api.event.events;
 
 import ac.grim.grimac.api.GrimUser;
 import ac.grim.grimac.api.event.EventChannel;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,7 @@ public final class GrimPlayerSetbackEvent extends GrimSetbackEvent<GrimPlayerSet
         }
 
         public void onPlayerSetback(@NotNull GrimPlugin plugin, @NotNull Handler handler) {
-            subscribe(handler, 0, false, plugin, null);
+            subscribe(handler, ListenerPriority.NORMAL, false, plugin, null);
         }
 
         public void onPlayerSetback(@NotNull GrimPlugin plugin, @NotNull Handler handler, int priority) {

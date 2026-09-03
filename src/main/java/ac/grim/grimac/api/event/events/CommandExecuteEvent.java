@@ -3,6 +3,7 @@ package ac.grim.grimac.api.event.events;
 import ac.grim.grimac.api.AbstractCheck;
 import ac.grim.grimac.api.GrimUser;
 import ac.grim.grimac.api.event.EventChannel;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -71,7 +72,7 @@ public class CommandExecuteEvent extends GrimVerboseCheckEvent<CommandExecuteEve
         }
 
         public void onCommandExecuteSupplier(@NotNull GrimPlugin plugin, @NotNull SupplierHandler handler) {
-            subscribe(handler, 0, false, plugin, null);
+            subscribe(handler, ListenerPriority.NORMAL, false, plugin, null);
         }
 
         public void onCommandExecuteSupplier(@NotNull GrimPlugin plugin, @NotNull SupplierHandler handler, int priority) {
