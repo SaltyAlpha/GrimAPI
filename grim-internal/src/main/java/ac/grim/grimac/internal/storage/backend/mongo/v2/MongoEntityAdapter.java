@@ -731,7 +731,9 @@ public final class MongoEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
         if (op.value() == null) requireField(shape, op.fromField());
         String selector = op.indexName() == null ? "_id" : stripDir(requireIndex(kind, op.indexName()).fields().get(0));
         Object key = op.indexName() == null ? encodeIdValue(op.key()) : encodeIndexValue(op.key());
-        Bson filter = Filters.and(Filters.eq(selector, key), Filters.eq(op.field(), encodeIndexValue(op.sentinel())));
+        // Documents migrated from the legacy backend may lack the field entirely; that reads as the sentinel too.
+        Bson atSentinel = Filters.or(Filters.eq(op.field(), encodeIndexValue(op.sentinel())), Filters.eq(op.field(), null));
+        Bson filter = Filters.and(Filters.eq(selector, key), atSentinel);
         if (op.value() != null) {
             return docColl(id).updateMany(filter, Updates.set(op.field(), encodeIndexValue(op.value()))).getModifiedCount();
         }

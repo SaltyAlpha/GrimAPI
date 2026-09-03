@@ -74,7 +74,9 @@ public final class EntityOps {
      * otherwise by equality on the index's leading column. {@code value} wins;
      * when it is null the row's own {@code fromField} is copied instead.
      * Returns the number of rows changed. A repeat call changes nothing, so
-     * concurrent callers never conflict.
+     * concurrent callers never conflict. Meant for sentinel columns such as
+     * {@code closed_at}; neither {@code field} nor the index may be backed by a
+     * case-insensitive companion, which this operation does not maintain.
      */
     public record SetIfSentinelOp(
             @NotNull Category<?> category,

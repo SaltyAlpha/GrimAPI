@@ -762,13 +762,17 @@ public final class SqlEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
         // A null value copies the row's own fromField column instead of binding a parameter.
         String assignment = op.value() == null ? dialect.quoteIdentifier(fieldDef(shape, op.fromField()).name()) : "?";
         String target = dialect.quoteIdentifier(targetDef.name());
+        // Rows whose new value would still be the sentinel are excluded so the count means rows changed on every dialect.
+        if (op.sentinel().equals(op.value())) return 0L;
         String sql = "UPDATE " + dialect.quoteIdentifier(id.name()) + " SET " + target + " = " + assignment
-            + " WHERE " + dialect.quoteIdentifier(selector) + " = ? AND " + target + " = ?";
+            + " WHERE " + dialect.quoteIdentifier(selector) + " = ? AND " + target + " = ?"
+            + (op.value() == null ? " AND " + assignment + " <> ?" : "");
         try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             int parameter = 1;
             if (op.value() != null) SqlBindings.bind(ps, parameter++, targetDef, op.value());
-            SqlBindings.bind(ps, parameter, fieldDef(shape, selector), op.key());
-            SqlBindings.bind(ps, parameter + 1, targetDef, op.sentinel());
+            SqlBindings.bind(ps, parameter++, fieldDef(shape, selector), op.key());
+            SqlBindings.bind(ps, parameter++, targetDef, op.sentinel());
+            if (op.value() == null) SqlBindings.bind(ps, parameter, targetDef, op.sentinel());
             return ps.executeUpdate();
         }
     }
