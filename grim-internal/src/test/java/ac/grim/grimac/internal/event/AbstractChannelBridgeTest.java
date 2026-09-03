@@ -3,6 +3,7 @@ package ac.grim.grimac.internal.event;
 import ac.grim.grimac.api.event.AbstractEventChannel;
 import ac.grim.grimac.api.event.EventChannel;
 import ac.grim.grimac.api.event.GrimEvent;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.BasicGrimPlugin;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import ac.grim.grimac.internal.plugin.resolver.GrimExtensionManager;
@@ -43,7 +44,11 @@ class AbstractChannelBridgeTest {
             public Channel() { super((Class<Animal<?>>) (Class) Animal.class, Handler.class); }
 
             public void onAnimal(@NotNull GrimPlugin plugin, @NotNull Handler h) {
-                subscribeAbstract(h, 0, false, plugin);
+                subscribeAbstract(h, ListenerPriority.NORMAL, false, plugin);
+            }
+
+            public void onAnimal(@NotNull GrimPlugin plugin, @NotNull Handler h, int priority) {
+                subscribeAbstract(h, priority, false, plugin);
             }
         }
     }
@@ -56,7 +61,7 @@ class AbstractChannelBridgeTest {
             public Channel() { super(Dog.class, Handler.class); }
 
             public void onDog(@NotNull GrimPlugin plugin, @NotNull Handler h) {
-                subscribe(h, 0, false, plugin, null);
+                subscribe(h, ListenerPriority.NORMAL, false, plugin, null);
             }
 
             public void fire(@NotNull String name) {
@@ -83,7 +88,11 @@ class AbstractChannelBridgeTest {
             public Channel() { super(Cat.class, Handler.class); }
 
             public void onCat(@NotNull GrimPlugin plugin, @NotNull Handler h) {
-                subscribe(h, 0, false, plugin, null);
+                subscribe(h, ListenerPriority.NORMAL, false, plugin, null);
+            }
+
+            public void onCat(@NotNull GrimPlugin plugin, @NotNull Handler h, int priority) {
+                subscribe(h, priority, false, plugin, null);
             }
 
             public void fire(@NotNull String name) {
@@ -150,6 +159,18 @@ class AbstractChannelBridgeTest {
         catCh.fire("Mittens");
 
         assertEquals(List.of("Dog(Fido)", "Cat(Mittens)"), seen);
+    }
+
+    @Test
+    void maxValueAbstractPriorityRunsBeforeMonitorOnLateSubtype() {
+        List<String> order = new ArrayList<>();
+        animalCh.onAnimal(plugin, species -> order.add("abstract-max"), Integer.MAX_VALUE);
+
+        animalCh.registerSubtype(Cat.class, catCh, Cat.Channel::bridgeFromAnimal);
+        catCh.onCat(plugin, name -> order.add("monitor"), ListenerPriority.MONITOR);
+        catCh.fire("Mittens");
+
+        assertEquals(List.of("abstract-max", "monitor"), order);
     }
 
     @Test

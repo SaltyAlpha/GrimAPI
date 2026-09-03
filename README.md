@@ -102,7 +102,8 @@ bus.get(FlagEvent.class)
 
 // Priority + ignoreCancelled overloads
 bus.get(FlagEvent.class)
-   .onFlag(grim, (u, c, v, cancelled) -> true, /*priority*/ 10, /*ignoreCancelled*/ false);
+   .onFlag(grim, (u, c, v, cancelled) -> true,
+           ListenerPriority.HIGH, /*ignoreCancelled*/ false);
 ```
 
 `api.getGrimPlugin(...)` is the modern replacement for examples that manually
@@ -159,12 +160,12 @@ public final class MyHotPathClass {
 }
 ```
 
-**Priority ordering.** Lower priority fires first; higher priority gets the
-final say on cancellation. This matches Bukkit's `EventPriority`
-convention — a handler at a high priority can observe the settled cancelled
-state after lower-priority handlers have run (useful for monitoring) or,
-when registered with `ignoreCancelled = true`, override a lower-priority
-handler's cancellation by returning `false`.
+**Priority ordering.** Listeners run in ascending order: `LOWEST`, `LOW`,
+`NORMAL`, `HIGH`, `HIGHEST`, then `MONITOR`. Omitted priorities use `NORMAL`.
+`MONITOR` is for listeners that only observe the completed event state.
+Explicit priorities above `MONITOR`, including `Integer.MAX_VALUE`, become
+`HIGHEST` so they run before monitors. Custom priorities at or below `MONITOR`
+keep their value, and equal priorities run in registration order.
 
 > **Note:** This is a direction flip from pre-1.3 Grim, which sorted
 > highest-first. Plugins migrating from 1.2.x that use explicit priority

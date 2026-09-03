@@ -4,6 +4,7 @@ import ac.grim.grimac.api.GrimUser;
 import ac.grim.grimac.api.event.AbstractEventChannel;
 import ac.grim.grimac.api.event.EventChannel;
 import ac.grim.grimac.api.event.GrimEvent;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,7 +53,7 @@ public abstract class GrimSetbackEvent<CHANNEL extends EventChannel<?, ?>> exten
         }
 
         public void onAnySetback(@NotNull GrimPlugin plugin, @NotNull Handler handler) {
-            subscribeAbstract(handler, 0, false, plugin);
+            subscribeAbstract(handler, ListenerPriority.NORMAL, false, plugin);
         }
 
         public void onAnySetback(@NotNull GrimPlugin plugin, @NotNull Handler handler, int priority) {
@@ -62,7 +63,7 @@ public abstract class GrimSetbackEvent<CHANNEL extends EventChannel<?, ?>> exten
         /** @deprecated resolve your context once at plugin enable — {@code api.getGrimPlugin(this)} — and call the {@link GrimPlugin}-taking overload. */
         @Deprecated
         public void onAnySetback(@NotNull Object pluginContext, @NotNull Handler handler) {
-            subscribeAbstractResolving(pluginContext, handler, 0, false);
+            subscribeAbstractResolving(pluginContext, handler, ListenerPriority.NORMAL, false);
         }
 
         /** @deprecated see {@link #onAnySetback(Object, Handler)}. */

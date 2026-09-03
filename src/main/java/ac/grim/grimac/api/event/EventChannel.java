@@ -307,7 +307,7 @@ public abstract class EventChannel<E extends GrimEvent<?>, H> {
             this.handler = handler;
             this.legacyListener = legacyListener;
             this.legacyEventClass = legacyEventClass;
-            this.priority = priority;
+            this.priority = ListenerPriority.normalize(priority);
             this.ignoreCancelled = ignoreCancelled;
             this.pluginContext = pluginContext;
             this.declaringClass = declaringClass;

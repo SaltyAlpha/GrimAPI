@@ -89,7 +89,7 @@ public abstract class GrimEvent<CHANNEL extends EventChannel<?, ?>> {
         }
 
         public void onAnyEvent(@NotNull GrimPlugin plugin, @NotNull Handler handler) {
-            subscribeAbstract(handler, 0, false, plugin);
+            subscribeAbstract(handler, ListenerPriority.NORMAL, false, plugin);
         }
 
         public void onAnyEvent(@NotNull GrimPlugin plugin, @NotNull Handler handler, int priority) {
@@ -103,7 +103,7 @@ public abstract class GrimEvent<CHANNEL extends EventChannel<?, ?>> {
         /** @deprecated resolve your context once at plugin enable — {@code api.getGrimPlugin(this)} — and call the {@link GrimPlugin}-taking overload. */
         @Deprecated
         public void onAnyEvent(@NotNull Object pluginContext, @NotNull Handler handler) {
-            subscribeAbstractResolving(pluginContext, handler, 0, false);
+            subscribeAbstractResolving(pluginContext, handler, ListenerPriority.NORMAL, false);
         }
 
         /** @deprecated see {@link #onAnyEvent(Object, Handler)}. */

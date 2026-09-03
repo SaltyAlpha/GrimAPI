@@ -204,7 +204,7 @@ public interface EventBus {
      */
     @Deprecated
     default <T extends GrimEvent<?>> void subscribe(@NotNull Object pluginContext, @NotNull Class<T> eventType, @NotNull GrimEventListener<T> listener) {
-        subscribe(pluginContext, eventType, listener, 0, false);
+        subscribe(pluginContext, eventType, listener, ListenerPriority.NORMAL, false);
     }
 
     /**
@@ -212,6 +212,6 @@ public interface EventBus {
      */
     @Deprecated
     default <T extends GrimEvent<?>> void subscribe(@NotNull GrimPlugin plugin, @NotNull Class<T> eventType, @NotNull GrimEventListener<T> listener) {
-        subscribe(plugin, eventType, listener, 0, false);
+        subscribe(plugin, eventType, listener, ListenerPriority.NORMAL, false);
     }
 }

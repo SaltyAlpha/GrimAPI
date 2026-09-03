@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface GrimEventHandler {
-    int priority() default 0; // Same as your current system (higher = earlier)
+    /** Listener priority. Defaults to {@link ListenerPriority#NORMAL}. */
+    int priority() default ListenerPriority.NORMAL;
     boolean ignoreCancelled() default false; // Support for ignoring cancelled events
 }

@@ -6,6 +6,7 @@ import ac.grim.grimac.api.event.AbstractEventChannel;
 import ac.grim.grimac.api.event.Cancellable;
 import ac.grim.grimac.api.event.EventChannel;
 import ac.grim.grimac.api.event.GrimEvent;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import lombok.Getter;
 import org.jetbrains.annotations.ApiStatus;
@@ -72,8 +73,8 @@ public abstract class GrimCheckEvent<CHANNEL extends EventChannel<?, ?>>
      *
      * <p>Returns the new cancelled state — the value is threaded back into
      * the priority-ordered dispatch loop of whichever concrete subtype
-     * fired, so a high-priority abstract subscriber can cancel and
-     * lower-priority direct subscribers to the concrete event see the
+     * fired, so a low-priority abstract subscriber can cancel and
+     * higher-priority direct subscribers to the concrete event see the
      * cancellation just like any other priority-ordered handler.
      */
     @FunctionalInterface
@@ -88,7 +89,7 @@ public abstract class GrimCheckEvent<CHANNEL extends EventChannel<?, ?>>
         }
 
         public void onCheck(@NotNull GrimPlugin plugin, @NotNull Handler handler) {
-            subscribeAbstract(handler, 0, false, plugin);
+            subscribeAbstract(handler, ListenerPriority.NORMAL, false, plugin);
         }
 
         public void onCheck(@NotNull GrimPlugin plugin, @NotNull Handler handler, int priority) {
@@ -102,7 +103,7 @@ public abstract class GrimCheckEvent<CHANNEL extends EventChannel<?, ?>>
         /** @deprecated resolve your context once at plugin enable — {@code api.getGrimPlugin(this)} — and call the {@link GrimPlugin}-taking overload. */
         @Deprecated
         public void onCheck(@NotNull Object pluginContext, @NotNull Handler handler) {
-            subscribeAbstractResolving(pluginContext, handler, 0, false);
+            subscribeAbstractResolving(pluginContext, handler, ListenerPriority.NORMAL, false);
         }
 
         /** @deprecated see {@link #onCheck(Object, Handler)}. */

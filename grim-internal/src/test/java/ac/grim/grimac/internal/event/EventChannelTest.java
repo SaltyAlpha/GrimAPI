@@ -4,6 +4,7 @@ import ac.grim.grimac.api.event.Cancellable;
 import ac.grim.grimac.api.event.EventChannel;
 import ac.grim.grimac.api.event.GrimEvent;
 import ac.grim.grimac.api.event.GrimEventListener;
+import ac.grim.grimac.api.event.ListenerPriority;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -41,8 +42,14 @@ class EventChannelTest {
 
             public Channel() { super(Ping.class, Handler.class); }
 
-            public void onPing(@NotNull Handler h) { subscribe(h, 0, false, null, null); }
+            public void onPing(@NotNull Handler h) { subscribe(h, ListenerPriority.NORMAL, false, null, null); }
             public void onPing(@NotNull Handler h, int priority) { subscribe(h, priority, false, null, null); }
+
+            public List<Integer> priorities() {
+                List<Integer> priorities = new ArrayList<>();
+                for (Entry<Handler> entry : entries()) priorities.add(entry.priority);
+                return priorities;
+            }
 
             public void fire(@NotNull String msg) {
                 Entry<Handler>[] entries = entries();
@@ -97,7 +104,7 @@ class EventChannelTest {
 
             public Channel() { super(Quest.class, Handler.class); }
 
-            public void onQuest(@NotNull Handler h) { subscribe(h, 0, false, null, null); }
+            public void onQuest(@NotNull Handler h) { subscribe(h, ListenerPriority.NORMAL, false, null, null); }
             public void onQuest(@NotNull Handler h, int priority, boolean ignoreCancelled) {
                 subscribe(h, priority, ignoreCancelled, null, null);
             }
@@ -136,6 +143,56 @@ class EventChannelTest {
     }
 
     // ── Tests ──────────────────────────────────────────────────────────────
+
+    @Test
+    void namedPrioritiesMatchBoltValues() {
+        assertEquals(1_000_000, ListenerPriority.LOWEST);
+        assertEquals(2_000_000, ListenerPriority.LOW);
+        assertEquals(3_000_000, ListenerPriority.NORMAL);
+        assertEquals(4_000_000, ListenerPriority.HIGH);
+        assertEquals(5_000_000, ListenerPriority.HIGHEST);
+        assertEquals(6_000_000, ListenerPriority.MONITOR);
+    }
+
+    @Test
+    void omittedTypedPriorityDefaultsToNormal() {
+        Ping.Channel ch = new Ping.Channel();
+        List<String> order = new ArrayList<>();
+        ch.onPing(msg -> order.add("high"), ListenerPriority.HIGH);
+        ch.onPing(msg -> order.add("default"));
+        ch.onPing(msg -> order.add("low"), ListenerPriority.LOW);
+
+        ch.fire("x");
+
+        assertEquals(List.of("low", "default", "high"), order);
+    }
+
+    @Test
+    void maxValueRunsBeforeMonitor() {
+        Ping.Channel ch = new Ping.Channel();
+        List<String> order = new ArrayList<>();
+        ch.onPing(msg -> order.add("monitor"), ListenerPriority.MONITOR);
+        ch.onPing(msg -> order.add("max"), Integer.MAX_VALUE);
+
+        ch.fire("x");
+
+        assertEquals(List.of("max", "monitor"), order);
+        assertEquals(List.of(ListenerPriority.HIGHEST, ListenerPriority.MONITOR), ch.priorities());
+    }
+
+    @Test
+    void equalPriorityPreservesRegistrationOrder() {
+        Ping.Channel ch = new Ping.Channel();
+        List<String> order = new ArrayList<>();
+        ch.onPing(msg -> order.add("first"), 2_500_000);
+        ch.onPing(msg -> order.add("second"), 2_500_000);
+        ch.onPing(msg -> order.add("third"), 2_500_000);
+
+        ch.fire("x");
+
+        assertEquals(List.of("first", "second", "third"), order);
+        assertEquals(List.of(2_500_000, 2_500_000, 2_500_000), ch.priorities());
+    }
 
     @Test
     void typedHandlersFireInPriorityOrderLowerFirst() {

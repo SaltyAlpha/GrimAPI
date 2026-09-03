@@ -4,6 +4,7 @@ import ac.grim.grimac.api.AbstractCheck;
 import ac.grim.grimac.api.GrimUser;
 import ac.grim.grimac.api.event.AbstractEventChannel;
 import ac.grim.grimac.api.event.EventChannel;
+import ac.grim.grimac.api.event.ListenerPriority;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -84,7 +85,7 @@ public abstract class GrimVerboseCheckEvent<CHANNEL extends EventChannel<?, ?>>
         }
 
         public void onVerboseCheckSupplier(@NotNull GrimPlugin plugin, @NotNull SupplierHandler handler) {
-            subscribeAbstract(handler, 0, false, plugin);
+            subscribeAbstract(handler, ListenerPriority.NORMAL, false, plugin);
         }
 
         public void onVerboseCheckSupplier(@NotNull GrimPlugin plugin, @NotNull SupplierHandler handler, int priority) {
@@ -125,7 +126,7 @@ public abstract class GrimVerboseCheckEvent<CHANNEL extends EventChannel<?, ?>>
         /** @deprecated resolve your context once at plugin enable — {@code api.getGrimPlugin(this)} — and call the {@link GrimPlugin}-taking overload. */
         @Deprecated
         public void onVerboseCheckSupplier(@NotNull Object pluginContext, @NotNull SupplierHandler handler) {
-            subscribeAbstractResolving(pluginContext, handler, 0, false);
+            subscribeAbstractResolving(pluginContext, handler, ListenerPriority.NORMAL, false);
         }
 
         /** @deprecated see {@link #onVerboseCheckSupplier(Object, SupplierHandler)}. */
