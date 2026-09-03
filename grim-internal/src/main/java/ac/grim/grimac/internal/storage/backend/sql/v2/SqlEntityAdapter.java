@@ -103,6 +103,7 @@ import java.util.logging.Logger;
  *   <li>5a.3 — FindByIndex / PrefixIndex / CountByIndex with keyset
  *       cursor seek, mirroring the Mongo adapter's
  *       {@code orderedColumnIndex} rule for compound indexes.</li>
+ *   <li>5a.4 — SetIfSentinel as one conditional UPDATE.</li>
  * </ul>
  */
 @ApiStatus.Internal
@@ -492,6 +493,7 @@ public final class SqlEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
             if (op instanceof EntityOps.FindByIndexOp f)     return (R) findByIndex(id, kind, f);
             if (op instanceof EntityOps.PrefixIndexOp p)     return (R) prefixIndex(id, kind, p);
             if (op instanceof EntityOps.CountByIndexOp c)    return (R) Long.valueOf(countByIndex(id, kind, c));
+            if (op instanceof EntityOps.SetIfSentinelOp s)   return (R) Long.valueOf(setIfSentinel(id, kind, s));
             throw new UnsupportedOperationException(
                 "SqlEntityAdapter does not handle " + op.getClass().getSimpleName());
         } catch (java.sql.SQLException | RuntimeException e) {
@@ -749,6 +751,25 @@ public final class SqlEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getLong(1) : 0L;
             }
+        }
+    }
+
+    private long setIfSentinel(@NotNull StoreId id, @NotNull Entity<?, ?, ?> kind,
+                               @NotNull EntityOps.SetIfSentinelOp op) throws java.sql.SQLException {
+        EncodeShape shape = kind.codec().shape();
+        EncodeShape.FieldDef targetDef = fieldDef(shape, op.field());
+        String selector = op.indexName() == null ? shape.idField() : stripDir(requireIndex(kind, op.indexName()).fields().get(0));
+        // A null value copies the row's own fromField column instead of binding a parameter.
+        String assignment = op.value() == null ? dialect.quoteIdentifier(fieldDef(shape, op.fromField()).name()) : "?";
+        String target = dialect.quoteIdentifier(targetDef.name());
+        String sql = "UPDATE " + dialect.quoteIdentifier(id.name()) + " SET " + target + " = " + assignment
+            + " WHERE " + dialect.quoteIdentifier(selector) + " = ? AND " + target + " = ?";
+        try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            int parameter = 1;
+            if (op.value() != null) SqlBindings.bind(ps, parameter++, targetDef, op.value());
+            SqlBindings.bind(ps, parameter, fieldDef(shape, selector), op.key());
+            SqlBindings.bind(ps, parameter + 1, targetDef, op.sentinel());
+            return ps.executeUpdate();
         }
     }
 

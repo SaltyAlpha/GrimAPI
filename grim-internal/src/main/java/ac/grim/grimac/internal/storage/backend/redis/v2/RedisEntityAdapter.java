@@ -115,6 +115,8 @@ public final class RedisEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
                 { deleteByIndex(storePrefix, kind, d); return null; }
             if (op instanceof EntityOps.CountByIndexOp c)
                 return (R) Long.valueOf(countByIndex(storePrefix, kind, c));
+            if (op instanceof EntityOps.SetIfSentinelOp s)
+                return (R) Long.valueOf(setIfSentinel(storePrefix, kind, s));
             throw new UnsupportedOperationException("RedisEntityAdapter: " + op.getClass().getName());
         } catch (RuntimeException e) {
             throw new BackendException("redis entity failed", e);
@@ -219,6 +221,42 @@ public final class RedisEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
         try (var j = pool.getResource()) {
             return j.zcard(indexKey);
         }
+    }
+
+    private long setIfSentinel(String prefix, Entity<?, ?, ?> kind, EntityOps.SetIfSentinelOp op) {
+        EncodeShape shape = kind.codec().shape();
+        EncodeShape.FieldDef targetDef = shape.fields().get(fieldIndex(shape, op.field()));
+        EncodeShape.FieldDef fromDef = op.value() == null ? shape.fields().get(fieldIndex(shape, op.fromField())) : null;
+        BsonCodec codec = BsonCodecs.regular(kind.recordType());
+        byte[] targetField = bytes(op.field());
+        byte[] sentinel = fieldValueBytes(targetDef, op.sentinel());
+        long changed = 0L;
+        try (var j = pool.getResource()) {
+            IndexSpec spec = op.indexName() == null ? null : requireIndex(kind, op.indexName());
+            List<String> ids = spec == null
+                ? List.of(RedisKeys.encode(op.key()))
+                : j.zrange(exactIndexKey(prefix, spec, normalizedIndexValue(spec, op.key())), 0, -1);
+            for (String id : ids) {
+                byte[] redisKey = bytes(prefix + id);
+                Map<byte[], byte[]> existing = j.hgetAll(redisKey);
+                if (existing == null || existing.isEmpty()) continue;
+                byte[] current = hashGet(existing, op.field());
+                if (!Arrays.equals(current, sentinel)) continue;
+                byte[] source = fromDef == null ? null : hashGet(existing, fromDef.name());
+                if (fromDef != null && source == null) continue;
+                byte[] encoded = fieldValueBytes(targetDef, fromDef == null ? op.value() : parseField(fromDef, source));
+                if (Arrays.equals(current, encoded)) continue;
+                // The changed field may lead a secondary index, so reindex from the pre- and post-images.
+                removeIndexEntries(j, prefix, kind, shape, existing);
+                j.hset(redisKey, targetField, encoded);
+                // Jedis' binary map is content keyed, so put replaces the old value in place.
+                existing.put(targetField, encoded);
+                Object record = decodeHash(kind, existing);
+                addIndexEntries(j, prefix, kind, shape, codec, record, codec.readField(record, idFieldIndex(shape)));
+                changed++;
+            }
+        }
+        return changed;
     }
 
     private void deleteById(String prefix, Entity<?, ?, ?> kind, EntityOps.DeleteByIdOp<?> op) {

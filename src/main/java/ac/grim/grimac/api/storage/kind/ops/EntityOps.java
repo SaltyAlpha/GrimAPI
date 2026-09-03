@@ -83,5 +83,9 @@ public final class EntityOps {
             @NotNull String field,
             @NotNull Object sentinel,
             @Nullable Object value,
-            @Nullable String fromField) implements Op<Long> {}
+            @Nullable String fromField) implements Op<Long> {
+        public SetIfSentinelOp {
+            if ((value == null) == (fromField == null)) throw new IllegalArgumentException("exactly one of value or fromField");
+        }
+    }
 }
