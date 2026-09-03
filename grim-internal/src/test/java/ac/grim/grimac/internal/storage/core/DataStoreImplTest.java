@@ -30,6 +30,7 @@ import ac.grim.grimac.internal.storage.backend.sqlite.SqliteBackendConfig;
 import ac.grim.grimac.internal.storage.backend.sqlite.v2.SqliteBackendV2;
 import ac.grim.grimac.internal.storage.category.V2BuiltinKinds;
 import ac.grim.grimac.internal.storage.checks.InMemoryCheckCatalogPersistence;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -100,6 +101,32 @@ class DataStoreImplTest {
             });
 
             assertFalse(backend.await(250L), "backend must not receive writes after ownership closes");
+        } finally {
+            store.flushAndClose(1_000L);
+        }
+    }
+
+    @Test
+    void drainWaitsForQueuedWritesToReachTheBackend() throws Exception {
+        CountDownLatch release = new CountDownLatch(1);
+        CapturingViolationBackend backend = new CapturingViolationBackend(release);
+        DataStoreImpl store = new DataStoreImpl(
+                new CategoryRouter(Map.of(Categories.VIOLATION, backend)),
+                new WritePathConfig(8, 1, 1L, 10_000L, 1_000L, WaitStrategyType.BLOCKING),
+                Logger.getLogger("DataStoreImplTest"));
+        store.start();
+
+        try {
+            store.submit(Categories.VIOLATION, event -> event
+                    .sessionId(UUID.randomUUID())
+                    .playerUuid(UUID.randomUUID())
+                    .checkId(7)
+                    .vl(1.0)
+                    .occurredEpochMs(1_700_000_000_000L));
+            assertTrue(backend.await(), "backend must have started consuming the write");
+            assertEquals(1, store.drain(200L), "a write the backend still holds counts as queued");
+            release.countDown();
+            assertEquals(0, store.drain(2_000L), "drain returns once the backend has consumed the write");
         } finally {
             store.flushAndClose(1_000L);
         }
@@ -218,6 +245,16 @@ class DataStoreImplTest {
     private static final class CapturingViolationBackend implements Backend {
         private final CountDownLatch seen = new CountDownLatch(1);
         private final AtomicReference<UUID> id = new AtomicReference<>();
+        // When set, the handler holds each write until released so tests can observe an in-flight event.
+        private final @Nullable CountDownLatch release;
+
+        CapturingViolationBackend() {
+            this(null);
+        }
+
+        CapturingViolationBackend(@Nullable CountDownLatch release) {
+            this.release = release;
+        }
 
         boolean await() throws InterruptedException {
             return await(2_000L);
@@ -252,7 +289,16 @@ class DataStoreImplTest {
             return (StorageEventHandler<E>) (StorageEventHandler<ViolationEvent>) (event, sequence, endOfBatch) -> {
                 id.set(event.id());
                 seen.countDown();
+                if (release != null) awaitQuietly(release);
             };
+        }
+
+        private static void awaitQuietly(CountDownLatch latch) {
+            try {
+                latch.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
 
         @Override public <R> Page<R> read(Category<?> cat, Query<R> query) { return Page.empty(); }

@@ -57,6 +57,8 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+    // Forward -Dgrim.test.* from the Gradle JVM so integration tests can target a remote database.
+    System.getProperties().forEach { key, value -> if (key.toString().startsWith("grim.test.")) systemProperty(key.toString(), value) }
 }
 
 // Publishing for the Legacy Module

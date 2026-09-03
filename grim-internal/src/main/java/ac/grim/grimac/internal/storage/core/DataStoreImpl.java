@@ -223,7 +223,7 @@ public final class DataStoreImpl implements DataStore {
               || n.startsWith("Remove")
               || n.startsWith("Put")
               || n.startsWith("IncrementBy")
-              || n.startsWith("SetIfHigher"));
+              || n.startsWith("SetIf"));
     }
 
     @Override
@@ -541,6 +541,11 @@ public final class DataStoreImpl implements DataStore {
     @Override
     public DataStoreMetrics metrics() {
         return metrics;
+    }
+
+    /** Waits for queued writes to reach their backends without closing anything. Returns the events still queued. */
+    public int drain(long timeoutMs) {
+        return closed ? 0 : rings.awaitDrain(timeoutMs);
     }
 
     @Override

@@ -26,6 +26,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.Updates;
 import org.bson.BsonBinaryWriter;
 import org.bson.Document;
 import org.bson.RawBsonDocument;
@@ -61,6 +62,7 @@ import java.util.logging.Logger;
  *   <li>{@code FindByIndexOp} → {@code find(field eq) + sort + limit}</li>
  *   <li>{@code PrefixIndexOp} → {@code find(field $regex ^prefix)}</li>
  *   <li>{@code CountByIndexOp} → {@code countDocuments(field eq)}</li>
+ *   <li>{@code SetIfSentinelOp} → {@code updateMany(selection eq and field eq)}</li>
  *   <li>{@code DeleteByIdOp} → {@code deleteOne(_id eq)}</li>
  * </ul>
  *
@@ -213,6 +215,7 @@ public final class MongoEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
             if (op instanceof EntityOps.FindByIndexOp f)     return (R) findByIndex(id, kind, f);
             if (op instanceof EntityOps.PrefixIndexOp p)     return (R) prefixIndex(id, kind, p);
             if (op instanceof EntityOps.CountByIndexOp c)    return (R) Long.valueOf(countByIndex(id, kind, c));
+            if (op instanceof EntityOps.SetIfSentinelOp s)   return (R) Long.valueOf(setIfSentinel(id, kind, s));
             if (op instanceof EntityOps.DeleteByIdOp d)    { deleteById(id, d); return null; }
             if (op instanceof EntityOps.DeleteByIndexOp d) { deleteByIndex(id, kind, d); return null; }
             throw new UnsupportedOperationException(
@@ -719,6 +722,28 @@ public final class MongoEntityAdapter implements KindAdapter<Entity<?, ?, ?>> {
         IndexSpec spec = requireIndex(kind, op.indexName());
         String leading = stripDir(spec.fields().get(0));
         return docColl(id).countDocuments(Filters.eq(leading, encodeIndexValue(op.key())));
+    }
+
+    private long setIfSentinel(@NotNull StoreId id, @NotNull Entity<?, ?, ?> kind,
+                               @NotNull EntityOps.SetIfSentinelOp op) {
+        EncodeShape shape = kind.codec().shape();
+        requireField(shape, op.field());
+        if (op.value() == null) requireField(shape, op.fromField());
+        String selector = op.indexName() == null ? "_id" : stripDir(requireIndex(kind, op.indexName()).fields().get(0));
+        Object key = op.indexName() == null ? encodeIdValue(op.key()) : encodeIndexValue(op.key());
+        // Documents migrated from the legacy backend may lack the field entirely; that reads as the sentinel too.
+        Bson atSentinel = Filters.or(Filters.eq(op.field(), encodeIndexValue(op.sentinel())), Filters.eq(op.field(), null));
+        Bson filter = Filters.and(Filters.eq(selector, key), atSentinel);
+        if (op.value() != null) {
+            return docColl(id).updateMany(filter, Updates.set(op.field(), encodeIndexValue(op.value()))).getModifiedCount();
+        }
+        // Pipeline form so the row's own column can be the source value.
+        Bson copy = new Document("$set", new Document(op.field(), "$" + op.fromField()));
+        return docColl(id).updateMany(filter, List.of(copy)).getModifiedCount();
+    }
+
+    private static void requireField(@NotNull EncodeShape shape, @NotNull String field) {
+        if (resolveFieldIndex(shape, field) < 0) throw new IllegalArgumentException("shape has no field " + field);
     }
 
     private <ID> void deleteById(@NotNull StoreId id, @NotNull EntityOps.DeleteByIdOp<ID> op) {

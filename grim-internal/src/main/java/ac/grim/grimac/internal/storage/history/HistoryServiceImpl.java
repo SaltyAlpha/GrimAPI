@@ -26,6 +26,7 @@ import ac.grim.grimac.api.storage.verbose.VerboseRenderContext;
 import ac.grim.grimac.api.storage.verbose.VerboseSchema;
 import ac.grim.grimac.api.storage.verbose.VerboseSink;
 import ac.grim.grimac.internal.storage.checks.CheckRegistry;
+import ac.grim.grimac.internal.storage.instance.StartupLiveness;
 import ac.grim.grimac.internal.storage.verbose.GenericVerboseReader;
 import ac.grim.grimac.internal.storage.verbose.VerboseManifest;
 import ac.grim.grimac.internal.storage.verbose.VerboseRegistry;
@@ -71,6 +72,7 @@ public final class HistoryServiceImpl implements HistoryService {
     private volatile @Nullable EventStreamCategory<ViolationEvent, ViolationRecord> v2Violations;
     private volatile @Nullable Category<ServerStartupEvent> v2Startups;
     private volatile @Nullable VerboseRegistry verboseRegistry;
+    private volatile StartupLiveness startupLiveness = startup -> !startup.isClosed();
     private final Map<UUID, ServerStartupRecord> startupCache = new ConcurrentHashMap<>();
     private final Map<UUID, CachedManifest> verboseManifestCache = new ConcurrentHashMap<>();
 
@@ -107,6 +109,12 @@ public final class HistoryServiceImpl implements HistoryService {
     /** Install the binary verbose registry used by history rendering. */
     public HistoryServiceImpl withVerboseRegistry(@NotNull VerboseRegistry registry) {
         this.verboseRegistry = registry;
+        return this;
+    }
+
+    /** Install the startup lease liveness check used by history rendering. */
+    public HistoryServiceImpl withStartupLiveness(@NotNull StartupLiveness startupLiveness) {
+        this.startupLiveness = startupLiveness;
         return this;
     }
 
@@ -235,12 +243,13 @@ public final class HistoryServiceImpl implements HistoryService {
         return chain.thenApply(v -> new Page<>(List.of(out), nextCursor));
     }
 
-    private static SessionSummary toSummary(
+    private SessionSummary toSummary(
             SessionRecord s,
             @Nullable ServerStartupRecord startup,
             int ordinal,
             long violationCount,
             int uniqueCheckCount) {
+        s = withDerivedCrashClose(s, startup);
         return new SessionSummary(
                 s.sessionId(), s.playerUuid(), ordinal,
                 s.startedEpochMs(), s.lastActivityEpochMs(), s.closedAtEpochMs(),
@@ -363,7 +372,8 @@ public final class HistoryServiceImpl implements HistoryService {
             UUID id = s.startupId();
             if (id == null) continue;
             ServerStartupRecord cached = startupCache.get(id);
-            if (cached != null) {
+            // Only closed rows are final; an open row must be re-read so a crash shows up.
+            if (cached != null && cached.isClosed()) {
                 resolved.put(id, cached);
             } else {
                 missing.add(id);
@@ -387,8 +397,19 @@ public final class HistoryServiceImpl implements HistoryService {
         UUID startupId = session.startupId();
         if (startupId == null || v2Startups == null) return CompletableFuture.completedStage(null);
         ServerStartupRecord cached = startupCache.get(startupId);
-        if (cached != null) return CompletableFuture.completedStage(cached);
+        if (cached != null && cached.isClosed()) return CompletableFuture.completedStage(cached);
         return resolveStartups(List.of(session)).thenApply(map -> map.get(startupId));
+    }
+
+    private SessionRecord withDerivedCrashClose(
+            @NotNull SessionRecord session,
+            @Nullable ServerStartupRecord startup) {
+        if (session.isClosed() || startup == null || startupLiveness.isAlive(startup)) return session;
+        return new SessionRecord(
+                session.sessionId(), session.playerUuid(), session.serverName(), session.startedEpochMs(),
+                session.lastActivityEpochMs(), session.lastActivityEpochMs(), session.grimVersion(),
+                session.clientBrand(), session.clientVersion(), session.serverVersionString(), session.instanceId(),
+                session.startupId(), session.sessionBlobs());
     }
 
     private static @Nullable String serverName(

@@ -29,6 +29,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.logging.Level;
@@ -231,6 +232,14 @@ public final class RingRegistry {
     public int queuedCountFor(@NotNull Category<?> cat) {
         Entry<?> e = entries.get(cat);
         return e == null ? 0 : queuedCount(e);
+    }
+
+    /** Waits until every ring's consumer has caught up or the timeout elapses. Returns the events still queued. */
+    public int awaitDrain(long timeoutMs) {
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
+        int queued;
+        while ((queued = queuedCountTotal()) > 0 && System.nanoTime() < deadline) LockSupport.parkNanos(1_000_000L);
+        return queued;
     }
 
     public int queuedCountTotal() {

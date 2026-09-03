@@ -5,6 +5,7 @@ import ac.grim.grimac.api.storage.backend.BackendContext;
 import ac.grim.grimac.api.storage.backend.BackendV2;
 import ac.grim.grimac.api.storage.backend.KindAdapter;
 import ac.grim.grimac.api.storage.category.Categories;
+import ac.grim.grimac.api.storage.category.Category;
 import ac.grim.grimac.api.storage.codec.Codec;
 import ac.grim.grimac.api.storage.codec.EncodeShape;
 import ac.grim.grimac.api.storage.config.TableNames;
@@ -29,6 +30,8 @@ import ac.grim.grimac.api.storage.model.SettingScope;
 import ac.grim.grimac.api.storage.registry.StoreId;
 import ac.grim.grimac.internal.storage.backend.mongo.MongoBackendConfig;
 import ac.grim.grimac.internal.storage.backend.mongo.v2.MongoBackendV2;
+import ac.grim.grimac.internal.storage.backend.mysql.MysqlBackendConfig;
+import ac.grim.grimac.internal.storage.backend.mysql.v2.MysqlBackendV2;
 import ac.grim.grimac.internal.storage.backend.postgres.PostgresBackendConfig;
 import ac.grim.grimac.internal.storage.backend.postgres.v2.PostgresBackendV2;
 import ac.grim.grimac.internal.storage.backend.redis.RedisBackendConfig;
@@ -37,6 +40,8 @@ import ac.grim.grimac.internal.storage.backend.sqlite.SqliteBackendConfig;
 import ac.grim.grimac.internal.storage.backend.sqlite.v2.SqliteBackendV2;
 import ac.grim.grimac.internal.storage.backend.sql.v2.dialect.SqliteDialect;
 import ac.grim.grimac.internal.storage.category.V2BuiltinKinds;
+import com.mongodb.ConnectionString;
+import com.mongodb.ServerAddress;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -74,6 +79,7 @@ class V2BackendIntegrationTest {
             exerciseSettingsKv(backend, "v2_integ_settings_sqlite");
             exerciseCounter(backend, "v2_integ_counters_sqlite");
             exerciseOwnership(backend, "v2_integ_ownership_sqlite");
+            exerciseSetIfSentinel(backend, "v2_integ_set_if_sentinel_sqlite");
         } finally {
             backend.close();
         }
@@ -90,6 +96,7 @@ class V2BackendIntegrationTest {
             exerciseSettingsKv(backend, "v2_legacy_settings_sqlite");
             exerciseCounter(backend, "v2_legacy_counters_sqlite");
             exerciseOwnership(backend, "v2_legacy_ownership_sqlite");
+            exerciseSetIfSentinel(backend, "v2_legacy_set_if_sentinel_sqlite");
         } finally {
             backend.close();
         }
@@ -97,14 +104,21 @@ class V2BackendIntegrationTest {
 
     @Test @DisplayName("Postgres v2: entity write + read")
     void postgres() throws Exception {
-        assumeReachable("localhost", 5432);
+        String host = System.getProperty("grim.test.postgres.host", "localhost");
+        int port = Integer.getInteger("grim.test.postgres.port", 5432);
+        assumeReachable(host, port);
         PostgresBackendConfig cfg = new PostgresBackendConfig(
-            "localhost", 5432, "grim", "postgres", "grim-test-postgres", "", 256, TableNames.DEFAULTS);
+            host, port,
+            System.getProperty("grim.test.postgres.database", "grim"),
+            System.getProperty("grim.test.postgres.user", "postgres"),
+            System.getProperty("grim.test.postgres.password", "grim-test-postgres"),
+            "", 256, TableNames.DEFAULTS);
         PostgresBackendV2 backend = new PostgresBackendV2(cfg);
         try {
             backend.init(ctx(cfg));
             exerciseEntityIndexes(backend, "v2_integ_players_pg", "v2_integ_sessions_pg",
                     "v2_integ_startups_pg");
+            exerciseSetIfSentinel(backend, "v2_integ_set_if_sentinel_pg");
         } finally {
             backend.close();
         }
@@ -112,14 +126,18 @@ class V2BackendIntegrationTest {
 
     @Test @DisplayName("Redis v2: entity indexes")
     void redis() throws Exception {
-        assumeReachable("localhost", 6379);
+        String host = System.getProperty("grim.test.redis.host", "localhost");
+        int port = Integer.getInteger("grim.test.redis.port", 6379);
+        assumeReachable(host, port);
         RedisBackendConfig cfg = new RedisBackendConfig(
-            "localhost", 6379, 0, null, "grim-test-redis", "v2integ:", 2000, 256, false, TableNames.DEFAULTS);
+            host, port, 0, null, System.getProperty("grim.test.redis.password", "grim-test-redis"),
+            "v2integ:", 2000, 256, false, TableNames.DEFAULTS);
         RedisBackendV2 backend = new RedisBackendV2(cfg);
         try {
             backend.init(ctx(cfg));
             exerciseEntityIndexes(backend, "v2_integ_players_redis", "v2_integ_sessions_redis",
                     "v2_integ_startups_redis");
+            exerciseSetIfSentinel(backend, "v2_integ_set_if_sentinel_redis");
         } finally {
             backend.close();
         }
@@ -127,16 +145,21 @@ class V2BackendIntegrationTest {
 
     @Test @DisplayName("MySQL v2: entity indexes")
     void mysql() throws Exception {
-        assumeReachable("localhost", 3306);
-        ac.grim.grimac.internal.storage.backend.mysql.MysqlBackendConfig cfg =
-            new ac.grim.grimac.internal.storage.backend.mysql.MysqlBackendConfig(
-                "localhost", 3306, "grim", "grim", "grim-test-mysql", "", 256, TableNames.DEFAULTS);
-        ac.grim.grimac.internal.storage.backend.mysql.v2.MysqlBackendV2 backend =
-            new ac.grim.grimac.internal.storage.backend.mysql.v2.MysqlBackendV2(cfg);
+        String host = System.getProperty("grim.test.mysql.host", "localhost");
+        int port = Integer.getInteger("grim.test.mysql.port", 3306);
+        assumeReachable(host, port);
+        MysqlBackendConfig cfg = new MysqlBackendConfig(
+            host, port,
+            System.getProperty("grim.test.mysql.database", "grim"),
+            System.getProperty("grim.test.mysql.user", "grim"),
+            System.getProperty("grim.test.mysql.password", "grim-test-mysql"),
+            "", 256, TableNames.DEFAULTS);
+        MysqlBackendV2 backend = new MysqlBackendV2(cfg);
         try {
             backend.init(ctx(cfg));
             exerciseEntityIndexes(backend, "v2_integ_players_mysql", "v2_integ_sessions_mysql",
                     "v2_integ_startups_mysql");
+            exerciseSetIfSentinel(backend, "v2_integ_set_if_sentinel_mysql");
         } finally {
             backend.close();
         }
@@ -144,18 +167,110 @@ class V2BackendIntegrationTest {
 
     @Test @DisplayName("Mongo v2: entity indexes")
     void mongo() throws Exception {
-        assumeReachable("localhost", 27017);
-        MongoBackendConfig cfg = new MongoBackendConfig(
-            "mongodb://root:grim-test-mongo@localhost:27017/?authSource=admin",
-            "v2_integration_test", 64, TableNames.DEFAULTS);
+        String uri = System.getProperty("grim.test.mongo.uri",
+                "mongodb://root:grim-test-mongo@localhost:27017/?authSource=admin");
+        ServerAddress address = new ServerAddress(new ConnectionString(uri).getHosts().get(0));
+        assumeReachable(address.getHost(), address.getPort());
+        MongoBackendConfig cfg = new MongoBackendConfig(uri, "v2_integration_test", 64, TableNames.DEFAULTS);
         MongoBackendV2 backend = new MongoBackendV2(cfg);
         try {
             backend.init(ctx(cfg));
             exerciseEntityIndexes(backend, "v2_integ_players_mongo", "v2_integ_sessions_mongo",
                     "v2_integ_startups_mongo");
+            exerciseSetIfSentinel(backend, "v2_integ_set_if_sentinel_mongo");
         } finally {
             backend.close();
         }
+    }
+
+    private void exerciseSetIfSentinel(BackendV2 backend, String storeName) throws Exception {
+        String suffix = Long.toHexString(System.nanoTime());
+        StoreId sessionStore = StoreId.grim(storeName + "_sessions_" + suffix);
+        Entity<UUID, SessionEvent, SessionRecord> sessionsKind = V2BuiltinKinds.sessions();
+        KindAdapter<Entity<UUID, SessionEvent, SessionRecord>> sessionAdapter = backend.adapterFor(sessionsKind)
+                .orElseThrow(() -> new AssertionError(backend.id() + " has no Session Entity adapter"));
+        sessionAdapter.ensureStore(sessionStore, sessionsKind);
+
+        var sessionHandler = sessionAdapter.writeHandler(sessionStore, sessionsKind, Categories.SESSION);
+        UUID player = UUID.randomUUID();
+        UUID startupS = UUID.randomUUID();
+        UUID startupT = UUID.randomUUID();
+        UUID firstOpen = UUID.randomUUID();
+        UUID secondOpen = UUID.randomUUID();
+        UUID alreadyClosed = UUID.randomUUID();
+        UUID otherStartup = UUID.randomUUID();
+        long now = System.currentTimeMillis();
+        long oldClosedAt = now + 5_000L;
+        writeSession(sessionHandler, firstOpen, player, startupS, now, SessionRecord.OPEN, 0L);
+        writeSession(sessionHandler, secondOpen, player, startupS, now + 1_000L, SessionRecord.OPEN, 1L);
+        writeSession(sessionHandler, alreadyClosed, player, startupS, now + 2_000L, oldClosedAt, 2L);
+        writeSession(sessionHandler, otherStartup, player, startupT, now + 3_000L, SessionRecord.OPEN, 3L);
+
+        EntityOps.SetIfSentinelOp closeSessions = new EntityOps.SetIfSentinelOp(
+                Categories.SESSION, "by_startup_open", startupS, "closed_at", SessionRecord.OPEN, null, "last_activity");
+        long changed = sessionAdapter.execute(sessionStore, sessionsKind, closeSessions);
+        assertEquals(2L, changed, backend.id() + ": closes every open session for one startup");
+
+        SessionRecord first = readEntity(sessionAdapter, sessionStore, sessionsKind, Categories.SESSION, firstOpen);
+        SessionRecord second = readEntity(sessionAdapter, sessionStore, sessionsKind, Categories.SESSION, secondOpen);
+        SessionRecord closed = readEntity(sessionAdapter, sessionStore, sessionsKind, Categories.SESSION, alreadyClosed);
+        SessionRecord other = readEntity(sessionAdapter, sessionStore, sessionsKind, Categories.SESSION, otherStartup);
+        assertEquals(first.lastActivityEpochMs(), first.closedAtEpochMs(),
+                backend.id() + ": first session copies its own last activity");
+        assertEquals(second.lastActivityEpochMs(), second.closedAtEpochMs(),
+                backend.id() + ": second session copies its own last activity");
+        assertEquals(oldClosedAt, closed.closedAtEpochMs(), backend.id() + ": already-closed session keeps its close time");
+        assertEquals(SessionRecord.OPEN, other.closedAtEpochMs(), backend.id() + ": other startup remains open");
+        assertEquals(0L, (long) sessionAdapter.execute(sessionStore, sessionsKind, closeSessions),
+                backend.id() + ": repeated session close changes no rows");
+
+        StoreId startupStore = StoreId.grim(storeName + "_startups_" + suffix);
+        Entity<UUID, ServerStartupEvent, ServerStartupRecord> startupsKind = V2BuiltinKinds.serverStartups();
+        KindAdapter<Entity<UUID, ServerStartupEvent, ServerStartupRecord>> startupAdapter =
+                backend.adapterFor(startupsKind)
+                        .orElseThrow(() -> new AssertionError(backend.id() + " has no ServerStartup Entity adapter"));
+        startupAdapter.ensureStore(startupStore, startupsKind);
+        var startupHandler = startupAdapter.writeHandler(startupStore, startupsKind, Categories.SERVER_STARTUP);
+        UUID startupId = UUID.randomUUID();
+        long explicitClose = now + 10_000L;
+        writeStartup(startupHandler, startupId, UUID.randomUUID(), "test", now, now, ServerStartupRecord.OPEN);
+
+        EntityOps.CountByIndexOp openStartups = new EntityOps.CountByIndexOp(
+                Categories.SERVER_STARTUP, "by_open_heartbeat", ServerStartupRecord.OPEN);
+        assertEquals(1L, (long) startupAdapter.execute(startupStore, startupsKind, openStartups),
+                backend.id() + ": seeded startup is indexed as open");
+        EntityOps.SetIfSentinelOp closeStartup = new EntityOps.SetIfSentinelOp(
+                Categories.SERVER_STARTUP, null, startupId, "closed_at", ServerStartupRecord.OPEN, explicitClose, null);
+        assertEquals(1L, (long) startupAdapter.execute(startupStore, startupsKind, closeStartup),
+                backend.id() + ": closes one startup by id");
+        ServerStartupRecord startup = readEntity(
+                startupAdapter, startupStore, startupsKind, Categories.SERVER_STARTUP, startupId);
+        assertEquals(explicitClose, startup.closedAtEpochMs(), backend.id() + ": startup receives the explicit close time");
+        assertEquals(0L, (long) startupAdapter.execute(startupStore, startupsKind, openStartups),
+                backend.id() + ": closed startup leaves the open index");
+        assertEquals(0L, (long) startupAdapter.execute(startupStore, startupsKind, closeStartup),
+                backend.id() + ": repeated startup close changes no rows");
+
+        // The remaining branch pair: explicit value by index, and copy-from-field by id.
+        UUID startupU = UUID.randomUUID();
+        UUID openByIndex = UUID.randomUUID();
+        UUID openById = UUID.randomUUID();
+        writeSession(sessionHandler, openByIndex, player, startupU, now + 4_000L, SessionRecord.OPEN, 4L);
+        writeSession(sessionHandler, openById, player, startupT, now + 5_000L, SessionRecord.OPEN, 5L);
+        assertEquals(1L, (long) sessionAdapter.execute(sessionStore, sessionsKind, new EntityOps.SetIfSentinelOp(
+                Categories.SESSION, "by_startup_open", startupU, "closed_at", SessionRecord.OPEN, explicitClose, null)));
+        assertEquals(explicitClose, readEntity(sessionAdapter, sessionStore, sessionsKind, Categories.SESSION, openByIndex).closedAtEpochMs(),
+                backend.id() + ": explicit value applies by index");
+        assertEquals(1L, (long) sessionAdapter.execute(sessionStore, sessionsKind, new EntityOps.SetIfSentinelOp(
+                Categories.SESSION, null, openById, "closed_at", SessionRecord.OPEN, null, "last_activity")));
+        SessionRecord byId = readEntity(sessionAdapter, sessionStore, sessionsKind, Categories.SESSION, openById);
+        assertEquals(byId.lastActivityEpochMs(), byId.closedAtEpochMs(), backend.id() + ": copy from field applies by id");
+    }
+
+    private static <ID, E, R> R readEntity(KindAdapter<Entity<ID, E, R>> adapter, StoreId store,
+            Entity<ID, E, R> kind, Category<?> category, ID id) throws Exception {
+        Optional<R> record = adapter.execute(store, kind, new EntityOps.GetByIdOp<>(category, id));
+        return record.orElseThrow(() -> new AssertionError("missing seeded entity " + id));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
