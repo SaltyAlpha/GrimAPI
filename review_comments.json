@@ -1,0 +1,899 @@
+[
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891775043",
+    "pull_request_review_id": 2514306197,
+    "id": 1891775043,
+    "node_id": "PRRC_kwDOHj6BPs5wwjJD",
+    "diff_hunk": "@@ -1,21 +1,112 @@\n package ac.grim.grimac.api;\n \n import ac.grim.grimac.api.common.BasicStatus;\n+import ac.grim.grimac.api.dynamic.UnloadedBehavior;\n+import java.util.Collections;\n+import java.util.Set;\n+import java.util.stream.Collectors;\n+import java.util.stream.Stream;\n \n+/**\n+ * Base interface for all anti-cheat checks. Checks are modular components that detect specific\n+ * types of cheating behavior. This interface defines the very core functionality that all checks\n+ * must implement.\n+ */\n public interface AbstractCheck extends AbstractProcessor, BasicStatus {\n-\n+    /**\n+     * Gets the name of this check, used for identification and permissions.\n+     * @return The check's name\n+     */\n     String getCheckName();\n \n+    /**\n+     * Gets an alternative name for this check, defaults to the check name.\n+     * Useful for checks that may have multiple names or variants (IE AntiKB and AntiKnockback)\n+     * @return The alternative check name\n+     */\n     default String getAlternativeName() {\n         return getCheckName();\n     }\n \n+    /**\n+     * Gets the current violation level for this check.\n+     * @return Number of violations accumulated\n+     */\n     double getViolations();\n \n+    /**\n+     * Gets the rate at which violations decay over time.\n+     * @return The violation decay rate\n+     */\n     double getDecay();\n \n+    /**\n+     * Gets the violation level at which a setback/punishment should occur.\n+     * @return The setback threshold\n+     */\n     double getSetbackVL();\n \n+    /**\n+     * Whether this check is experimental/in testing.\n+     * @return true if experimental, false if stable\n+     */\n     boolean isExperimental();\n \n+    /**\n+     * Defines how this check should behave when unloaded.\n+     * This allows checks to specify custom behavior when they are disabled\n+     * rather than using the default no-op behavior.\n+     *\n+     * @return The UnloadedBehavior implementation for this check\n+     */\n+    UnloadedBehavior getUnloadedBehavior();\n+\n+    /**\n+     * @return Set of check classes that must be loaded along with this check to run\n+     */\n+    default Set<Class<? extends AbstractCheck>> getDependencies() {\n+        return Stream.concat(getLoadAfter().stream(), getLoadBefore().stream())\n+            .collect(Collectors.toSet());\n+    }\n+\n+    /**\n+     * @return Set of check classes that must run after this check\n+     */\n+    default Set<Class<? extends AbstractCheck>> getLoadAfter() {\n+        return Collections.emptySet();\n+    }\n+\n+    /**\n+     * @return Set of check classes that must run before this check\n+     */\n+    default Set<Class<? extends AbstractCheck>> getLoadBefore() {\n+        return Collections.emptySet();\n+    }\n+\n+    /**\n+     * Called when check is being loaded\n+     * @return true if loaded successfully\n+     */\n+    default boolean onLoad() {\n+        return true;\n+    }\n+\n+    /**\n+     * Called when check is being unloaded\n+     */\n+    default void onUnload() {}\n+\n+    /**\n+     * @return Bit mask representing all check types this check implements\n+     */\n+    int getCheckMask();\n+\n+    /**\n+     * Test if this check is of a specific type\n+     * @param type The check type to test for\n+     * @return true if this check handles the given type\n+     */\n+    default boolean isCheckType(CheckType type) {",
+    "path": "src/main/java/ac/grim/grimac/api/AbstractCheck.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "e152ebfad5e14e8513be0b41786d1c676fb579ee",
+    "user": {
+      "login": "MachineBreaker",
+      "id": 125693618,
+      "node_id": "U_kgDOB33usg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/125693618?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/MachineBreaker",
+      "html_url": "https://github.com/MachineBreaker",
+      "followers_url": "https://api.github.com/users/MachineBreaker/followers",
+      "following_url": "https://api.github.com/users/MachineBreaker/following{/other_user}",
+      "gists_url": "https://api.github.com/users/MachineBreaker/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/MachineBreaker/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/MachineBreaker/subscriptions",
+      "organizations_url": "https://api.github.com/users/MachineBreaker/orgs",
+      "repos_url": "https://api.github.com/users/MachineBreaker/repos",
+      "events_url": "https://api.github.com/users/MachineBreaker/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/MachineBreaker/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "I would prefer to call it is(",
+    "created_at": "2024-12-19T12:10:49Z",
+    "updated_at": "2024-12-19T12:10:50Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1891775043",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891775043"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1891775043"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891775043/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 109,
+    "side": "RIGHT",
+    "author_association": "NONE",
+    "original_position": 110,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891778386",
+    "pull_request_review_id": 2514310225,
+    "id": 1891778386,
+    "node_id": "PRRC_kwDOHj6BPs5wwj9S",
+    "diff_hunk": "@@ -1,21 +1,112 @@\n package ac.grim.grimac.api;\n \n import ac.grim.grimac.api.common.BasicStatus;\n+import ac.grim.grimac.api.dynamic.UnloadedBehavior;\n+import java.util.Collections;\n+import java.util.Set;\n+import java.util.stream.Collectors;\n+import java.util.stream.Stream;\n \n+/**\n+ * Base interface for all anti-cheat checks. Checks are modular components that detect specific\n+ * types of cheating behavior. This interface defines the very core functionality that all checks\n+ * must implement.\n+ */\n public interface AbstractCheck extends AbstractProcessor, BasicStatus {\n-\n+    /**\n+     * Gets the name of this check, used for identification and permissions.\n+     * @return The check's name\n+     */\n     String getCheckName();\n \n+    /**\n+     * Gets an alternative name for this check, defaults to the check name.\n+     * Useful for checks that may have multiple names or variants (IE AntiKB and AntiKnockback)\n+     * @return The alternative check name\n+     */\n     default String getAlternativeName() {\n         return getCheckName();\n     }\n \n+    /**\n+     * Gets the current violation level for this check.\n+     * @return Number of violations accumulated\n+     */\n     double getViolations();\n \n+    /**\n+     * Gets the rate at which violations decay over time.\n+     * @return The violation decay rate\n+     */\n     double getDecay();\n \n+    /**\n+     * Gets the violation level at which a setback/punishment should occur.\n+     * @return The setback threshold\n+     */\n     double getSetbackVL();\n \n+    /**\n+     * Whether this check is experimental/in testing.\n+     * @return true if experimental, false if stable\n+     */\n     boolean isExperimental();\n \n+    /**\n+     * Defines how this check should behave when unloaded.\n+     * This allows checks to specify custom behavior when they are disabled\n+     * rather than using the default no-op behavior.\n+     *\n+     * @return The UnloadedBehavior implementation for this check\n+     */\n+    UnloadedBehavior getUnloadedBehavior();\n+\n+    /**\n+     * @return Set of check classes that must be loaded along with this check to run\n+     */\n+    default Set<Class<? extends AbstractCheck>> getDependencies() {\n+        return Stream.concat(getLoadAfter().stream(), getLoadBefore().stream())\n+            .collect(Collectors.toSet());\n+    }\n+\n+    /**\n+     * @return Set of check classes that must run after this check\n+     */\n+    default Set<Class<? extends AbstractCheck>> getLoadAfter() {\n+        return Collections.emptySet();\n+    }\n+\n+    /**\n+     * @return Set of check classes that must run before this check\n+     */\n+    default Set<Class<? extends AbstractCheck>> getLoadBefore() {\n+        return Collections.emptySet();\n+    }\n+\n+    /**\n+     * Called when check is being loaded\n+     * @return true if loaded successfully\n+     */\n+    default boolean onLoad() {\n+        return true;\n+    }\n+\n+    /**\n+     * Called when check is being unloaded\n+     */\n+    default void onUnload() {}\n+\n+    /**\n+     * @return Bit mask representing all check types this check implements\n+     */\n+    int getCheckMask();",
+    "path": "src/main/java/ac/grim/grimac/api/AbstractCheck.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "e152ebfad5e14e8513be0b41786d1c676fb579ee",
+    "user": {
+      "login": "MachineBreaker",
+      "id": 125693618,
+      "node_id": "U_kgDOB33usg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/125693618?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/MachineBreaker",
+      "html_url": "https://github.com/MachineBreaker",
+      "followers_url": "https://api.github.com/users/MachineBreaker/followers",
+      "following_url": "https://api.github.com/users/MachineBreaker/following{/other_user}",
+      "gists_url": "https://api.github.com/users/MachineBreaker/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/MachineBreaker/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/MachineBreaker/subscriptions",
+      "organizations_url": "https://api.github.com/users/MachineBreaker/orgs",
+      "repos_url": "https://api.github.com/users/MachineBreaker/repos",
+      "events_url": "https://api.github.com/users/MachineBreaker/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/MachineBreaker/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "getMask since the class name is already suggesting",
+    "created_at": "2024-12-19T12:11:23Z",
+    "updated_at": "2024-12-19T12:11:23Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1891778386",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891778386"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1891778386"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891778386/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 102,
+    "side": "RIGHT",
+    "author_association": "NONE",
+    "original_position": 103,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891784449",
+    "pull_request_review_id": 2514317362,
+    "id": 1891784449,
+    "node_id": "PRRC_kwDOHj6BPs5wwlcB",
+    "diff_hunk": "@@ -0,0 +1,23 @@\n+package ac.grim.grimac.api.dynamic;\n+\n+import java.lang.reflect.Method;\n+\n+/**\n+ * Default implementation that returns safe \"no-op\" values for unloaded checks.\n+ * - boolean methods return false\n+ * - numeric methods return 0\n+ * - void methods do nothing\n+ * - object methods return null\n+ */\n+public class DefaultUnloadedBehavior implements UnloadedBehavior {",
+    "path": "src/main/java/ac/grim/grimac/api/dynamic/DefaultUnloadedBehavior.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "e152ebfad5e14e8513be0b41786d1c676fb579ee",
+    "user": {
+      "login": "MachineBreaker",
+      "id": 125693618,
+      "node_id": "U_kgDOB33usg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/125693618?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/MachineBreaker",
+      "html_url": "https://github.com/MachineBreaker",
+      "followers_url": "https://api.github.com/users/MachineBreaker/followers",
+      "following_url": "https://api.github.com/users/MachineBreaker/following{/other_user}",
+      "gists_url": "https://api.github.com/users/MachineBreaker/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/MachineBreaker/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/MachineBreaker/subscriptions",
+      "organizations_url": "https://api.github.com/users/MachineBreaker/orgs",
+      "repos_url": "https://api.github.com/users/MachineBreaker/repos",
+      "events_url": "https://api.github.com/users/MachineBreaker/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/MachineBreaker/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Shouldnt the constructor be private since we have an static instance?",
+    "created_at": "2024-12-19T12:12:32Z",
+    "updated_at": "2024-12-19T12:12:33Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1891784449",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891784449"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1891784449"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1891784449/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 12,
+    "original_line": 12,
+    "side": "RIGHT",
+    "author_association": "NONE",
+    "original_position": 12,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550708",
+    "pull_request_review_id": 2518571212,
+    "id": 1894550708,
+    "node_id": "PRRC_kwDOHj6BPs5w7Iy0",
+    "diff_hunk": "@@ -0,0 +1,30 @@\n+package ac.grim.grimac.api;\n+\n+/**\n+ * Represents different types of checks that can be performed\n+ */\n+public enum CheckType {\n+    PACKET(0),\n+    POSITION(1),\n+    ROTATION(2),\n+    VEHICLE(3),\n+    PRE_PREDICTION(4), \n+    BLOCK_BREAK(5),\n+    BLOCK_PLACE(6),\n+    POST_PREDICTION(7);\n+\n+    private final int bitPosition;\n+    private final int mask;\n+    \n+    CheckType(int bitPosition) {\n+        if (bitPosition >= 32) {\n+            throw new IllegalArgumentException(\"Cannot have more than 32 check types\");\n+        }\n+        this.bitPosition = bitPosition;\n+        this.mask = 1 << bitPosition;\n+    }\n+    \n+    public int getMask() {\n+        return mask;\n+    }\n+}",
+    "path": "src/main/java/ac/grim/grimac/api/CheckType.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n}\n\n```\n",
+    "created_at": "2024-12-21T04:10:30Z",
+    "updated_at": "2024-12-21T04:15:14Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550708",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550708"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550708"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550708/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 67,
+    "original_line": 30,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 30,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550745",
+    "pull_request_review_id": 2518571212,
+    "id": 1894550745,
+    "node_id": "PRRC_kwDOHj6BPs5w7IzZ",
+    "diff_hunk": "@@ -0,0 +1,23 @@\n+package ac.grim.grimac.api.dynamic;\n+\n+import java.lang.reflect.Method;\n+\n+/**\n+ * Default implementation that returns safe \"no-op\" values for unloaded checks.\n+ * - boolean methods return false\n+ * - numeric methods return 0\n+ * - void methods do nothing\n+ * - object methods return null\n+ */\n+public class DefaultUnloadedBehavior implements UnloadedBehavior {\n+  public static final UnloadedBehavior INSTANCE = new DefaultUnloadedBehavior();\n+\n+  @Override\n+  public Object handleUnloadedCall(Method method, Object[] args) {\n+    Class<?> returnType = method.getReturnType();\n+    if (returnType == boolean.class) return false;\n+    if (returnType == int.class) return 0;\n+    if (returnType == void.class) return null;\n+    return null;\n+  }\n+}",
+    "path": "src/main/java/ac/grim/grimac/api/dynamic/DefaultUnloadedBehavior.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n}\n\n```\n",
+    "created_at": "2024-12-21T04:10:38Z",
+    "updated_at": "2024-12-21T04:15:14Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550745",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550745"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550745"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550745/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 23,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 23,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550776",
+    "pull_request_review_id": 2518571212,
+    "id": 1894550776,
+    "node_id": "PRRC_kwDOHj6BPs5w7Iz4",
+    "diff_hunk": "@@ -0,0 +1,19 @@\n+package ac.grim.grimac.api.dynamic;\n+\n+import java.lang.reflect.Method;\n+\n+/**\n+ * Defines how an unloaded check should behave when its methods are called.\n+ * This allows for graceful degradation when checks are disabled/unloaded.\n+ *\n+ */\n+public interface UnloadedBehavior {\n+    /**\n+     * Handle a method call on an unloaded check\n+     *\n+     * @param method The method being called\n+     * @param args The arguments passed to the method\n+     * @return The value to return from the method call\n+     */\n+    Object handleUnloadedCall(Method method, Object[] args);\n+}",
+    "path": "src/main/java/ac/grim/grimac/api/dynamic/UnloadedBehavior.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n}\n\n```\n",
+    "created_at": "2024-12-21T04:10:46Z",
+    "updated_at": "2024-12-21T04:15:14Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550776",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550776"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550776"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550776/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 19,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 19,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550853",
+    "pull_request_review_id": 2518571212,
+    "id": 1894550853,
+    "node_id": "PRRC_kwDOHj6BPs5w7I1F",
+    "diff_hunk": "@@ -0,0 +1,19 @@\n+package ac.grim.grimac.api.dynamic;\n+\n+import java.lang.reflect.Method;\n+\n+/**\n+ * Defines how an unloaded check should behave when its methods are called.\n+ * This allows for graceful degradation when checks are disabled/unloaded.\n+ *",
+    "path": "src/main/java/ac/grim/grimac/api/dynamic/UnloadedBehavior.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n```\n",
+    "created_at": "2024-12-21T04:10:57Z",
+    "updated_at": "2024-12-21T04:15:14Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550853",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550853"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894550853"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894550853/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 8,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 8,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551133",
+    "pull_request_review_id": 2518571212,
+    "id": 1894551133,
+    "node_id": "PRRC_kwDOHj6BPs5w7I5d",
+    "diff_hunk": "",
+    "path": "src/main/java/ac/grim/grimac/api/dynamic/DefaultUnloadedBehavior.java",
+    "commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "indents should be 4 spaces, not 2",
+    "created_at": "2024-12-21T04:12:14Z",
+    "updated_at": "2024-12-21T04:15:14Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894551133",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551133"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894551133"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551133/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 1,
+    "original_line": 1,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 1,
+    "position": 1,
+    "subject_type": "file"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551174",
+    "pull_request_review_id": 2518571212,
+    "id": 1894551174,
+    "node_id": "PRRC_kwDOHj6BPs5w7I6G",
+    "diff_hunk": "@@ -1,21 +1,126 @@\n package ac.grim.grimac.api;\n \n import ac.grim.grimac.api.common.BasicStatus;\n+import ac.grim.grimac.api.dynamic.DefaultUnloadedBehavior;\n+import ac.grim.grimac.api.dynamic.UnloadedBehavior;\n+import java.util.Collections;\n+import java.util.Set;\n+import java.util.stream.Collectors;\n+import java.util.stream.Stream;\n \n+/**\n+ * Base interface for all anti-cheat checks. Checks are modular components that detect specific\n+ * types of cheating behavior. This interface defines the very core functionality that all checks\n+ * must implement.\n+ */\n public interface AbstractCheck extends AbstractProcessor, BasicStatus {\n-\n+    /**\n+     * Gets the name of this check, used for identification and permissions.\n+     * @return The check's name\n+     */\n     String getCheckName();\n \n+    /**\n+     * Gets an alternative name for this check, defaults to the check name.\n+     * Useful for checks that may have multiple names or variants (IE AntiKB and AntiKnockback)\n+     * @return The alternative check name\n+     */\n     default String getAlternativeName() {\n         return getCheckName();\n     }\n \n+    /**\n+     * Gets the current violation level for this check.\n+     * @return Number of violations accumulated\n+     */\n     double getViolations();\n \n+    /**\n+     * Gets the rate at which violations decay over time.\n+     * @return The violation decay rate\n+     */\n     double getDecay();\n \n+    /**\n+     * Gets the violation level at which a setback/punishment should occur.\n+     * @return The setback threshold\n+     */\n     double getSetbackVL();\n \n+    /**\n+     * Whether this check is experimental/in testing.\n+     * @return true if experimental, false if stable\n+     */\n     boolean isExperimental();\n \n+    /**\n+     * Defines how this check should behave when unloaded.\n+     * This allows checks to specify custom behavior when they are disabled\n+     * rather than using the default no-op behavior.\n+     *\n+     * @return The UnloadedBehavior implementation for this check\n+     */\n+    default UnloadedBehavior getUnloadedBehavior() {\n+        return DefaultUnloadedBehavior.INSTANCE;\n+    }\n+\n+    /**\n+     * @return Set of check classes that must be loaded along with this check to run\n+     */\n+    default Set<Class<? extends AbstractCheck>> getDependencies() {\n+        return Stream.concat(getLoadAfter().stream(), getLoadBefore().stream())\n+            .collect(Collectors.toSet());\n+    }\n+\n+    /**\n+     * @return Set of check classes that must run after this check\n+     */\n+    default Set<Class<? extends AbstractCheck>> getLoadAfter() {\n+        return Collections.emptySet();\n+    }\n+\n+    /**\n+     * @return Set of check classes that must run before this check\n+     */\n+    default Set<Class<? extends AbstractCheck>> getLoadBefore() {\n+        return Collections.emptySet();\n+    }\n+\n+    /**\n+     * Called when check is being loaded\n+     * @return true if loaded successfully\n+     */\n+    default boolean onLoad() {\n+        return true;\n+    }\n+\n+    /**\n+     * Called when check is being unloaded\n+     */\n+    default void onUnload() {}\n+\n+    /**\n+     * @return Bit mask representing all check types this check implements\n+     */\n+    int getMask();\n+\n+    /**\n+     * Test if this check is of a specific type\n+     * @param type The check type to test for\n+     * @return true if this check handles the given type\n+     */\n+    default boolean is(CheckType type) {\n+        return (getMask() & type.getMask()) != 0;\n+    }",
+    "path": "src/main/java/ac/grim/grimac/api/AbstractCheck.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n    }\n\n```\n",
+    "created_at": "2024-12-21T04:12:55Z",
+    "updated_at": "2024-12-21T04:15:14Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894551174",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551174"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894551174"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551174/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 114,
+    "original_line": 114,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 115,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551206",
+    "pull_request_review_id": 2518571212,
+    "id": 1894551206,
+    "node_id": "PRRC_kwDOHj6BPs5w7I6m",
+    "diff_hunk": "@@ -1,21 +1,126 @@\n package ac.grim.grimac.api;\n \n import ac.grim.grimac.api.common.BasicStatus;\n+import ac.grim.grimac.api.dynamic.DefaultUnloadedBehavior;\n+import ac.grim.grimac.api.dynamic.UnloadedBehavior;\n+import java.util.Collections;\n+import java.util.Set;\n+import java.util.stream.Collectors;\n+import java.util.stream.Stream;\n \n+/**\n+ * Base interface for all anti-cheat checks. Checks are modular components that detect specific\n+ * types of cheating behavior. This interface defines the very core functionality that all checks\n+ * must implement.\n+ */\n public interface AbstractCheck extends AbstractProcessor, BasicStatus {\n-\n+    /**\n+     * Gets the name of this check, used for identification and permissions.\n+     * @return The check's name\n+     */\n     String getCheckName();\n \n+    /**\n+     * Gets an alternative name for this check, defaults to the check name.\n+     * Useful for checks that may have multiple names or variants (IE AntiKB and AntiKnockback)",
+    "path": "src/main/java/ac/grim/grimac/api/AbstractCheck.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n     * Useful for checks that may have multiple names or variants (ie AntiKB and AntiKnockback)\n```\n",
+    "created_at": "2024-12-21T04:13:31Z",
+    "updated_at": "2024-12-21T04:15:14Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894551206",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551206"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894551206"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894551206/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 25,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 26,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894556706",
+    "pull_request_review_id": 2518577240,
+    "id": 1894556706,
+    "node_id": "PRRC_kwDOHj6BPs5w7KQi",
+    "diff_hunk": "@@ -0,0 +1,30 @@\n+package ac.grim.grimac.api;\n+\n+/**\n+ * Represents different types of checks that can be performed\n+ */\n+public enum CheckType {\n+    PACKET(0),\n+    POSITION(1),\n+    ROTATION(2),\n+    VEHICLE(3),\n+    PRE_PREDICTION(4), \n+    BLOCK_BREAK(5),\n+    BLOCK_PLACE(6),\n+    POST_PREDICTION(7);\n+\n+    private final int bitPosition;",
+    "path": "src/main/java/ac/grim/grimac/api/CheckType.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "aaea77044e280ec9792bd559ad288dc85343fb8d",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "This is never used outside the constructor, you could also just use `ordinal()`",
+    "created_at": "2024-12-21T04:56:56Z",
+    "updated_at": "2024-12-21T04:57:48Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894556706",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894556706"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894556706"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894556706/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 16,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 16,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894780240",
+    "pull_request_review_id": 2519549958,
+    "id": 1894780240,
+    "node_id": "PRRC_kwDOHj6BPs5w8A1Q",
+    "diff_hunk": "@@ -0,0 +1,67 @@\n+package ac.grim.grimac.api;\n+\n+/**\n+ * Represents the types of events a check can listen to.\n+ * Checks can listen to multiple event types simultaneously via bitmasks.\n+ * For example, a check could listen to both POSITION and ROTATION events\n+ * by combining their respective masks.\n+ */\n+public enum CheckType {\n+    /**\n+     * For checks without any event listeners\n+     */\n+    NONE(0),\n+\n+    /**\n+     * Packet analysis events\n+     */\n+    PACKET(1),\n+\n+    /**\n+     * Player movement events\n+     */\n+    POSITION(2),\n+\n+    /**\n+     * Player rotation events\n+     */\n+    ROTATION(3),\n+\n+    /**\n+     * Vehicle-related events\n+     */\n+    VEHICLE(4),\n+\n+    /**\n+     * Pre-prediction calculation events\n+     */\n+    PRE_PREDICTION(5),\n+\n+    /**\n+     * Block breaking events\n+     */\n+    BLOCK_BREAK(6),\n+\n+    /**\n+     * Block placement events\n+     */\n+    BLOCK_PLACE(7),\n+\n+    /**\n+     * Post-prediction calculation events\n+     */\n+    POST_PREDICTION(8);\n+\n+    private final int mask;\n+\n+    CheckType(int bitPosition) {\n+        if (bitPosition > 0 && bitPosition >= 32) {\n+            throw new IllegalArgumentException(\"Cannot have more than 32 check types\");\n+        }\n+        this.mask = bitPosition == 0 ? 0 : 1 << (bitPosition - 1);\n+    }\n+\n+    public int getMask() {\n+        return mask;\n+    }\n+}",
+    "path": "src/main/java/ac/grim/grimac/api/CheckType.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n}\n\n```\n",
+    "created_at": "2024-12-22T05:04:23Z",
+    "updated_at": "2024-12-22T05:07:32Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894780240",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894780240"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894780240"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894780240/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 67,
+    "original_line": 67,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 67,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894780897",
+    "pull_request_review_id": 2519549958,
+    "id": 1894780897,
+    "node_id": "PRRC_kwDOHj6BPs5w8A_h",
+    "diff_hunk": "@@ -0,0 +1,67 @@\n+package ac.grim.grimac.api;\n+\n+/**\n+ * Represents the types of events a check can listen to.\n+ * Checks can listen to multiple event types simultaneously via bitmasks.\n+ * For example, a check could listen to both POSITION and ROTATION events\n+ * by combining their respective masks.\n+ */\n+public enum CheckType {\n+    /**\n+     * For checks without any event listeners\n+     */\n+    NONE(0),\n+\n+    /**\n+     * Packet analysis events\n+     */\n+    PACKET(1),\n+\n+    /**\n+     * Player movement events\n+     */\n+    POSITION(2),\n+\n+    /**\n+     * Player rotation events\n+     */\n+    ROTATION(3),\n+\n+    /**\n+     * Vehicle-related events\n+     */\n+    VEHICLE(4),\n+\n+    /**\n+     * Pre-prediction calculation events\n+     */\n+    PRE_PREDICTION(5),\n+\n+    /**\n+     * Block breaking events\n+     */\n+    BLOCK_BREAK(6),\n+\n+    /**\n+     * Block placement events\n+     */\n+    BLOCK_PLACE(7),\n+\n+    /**\n+     * Post-prediction calculation events\n+     */\n+    POST_PREDICTION(8);\n+\n+    private final int mask;\n+\n+    CheckType(int bitPosition) {",
+    "path": "src/main/java/ac/grim/grimac/api/CheckType.java",
+    "commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "original_commit_id": "e05a14cf857282f9de526f3818e6e1d4038fd71a",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "you could get `bitPosition` from `ordinal()` instead of it being a constructor parameter",
+    "created_at": "2024-12-22T05:06:28Z",
+    "updated_at": "2024-12-22T05:07:32Z",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894780897",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894780897"
+      },
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/10#discussion_r1894780897"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/10"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/comments/1894780897/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 57,
+    "original_line": 57,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 57,
+    "position": 1,
+    "subject_type": "line"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": 4268560044,
+    "node_id": "LA_kwDOHj6BPs7-bQ6s",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/bug",
+    "name": "bug",
+    "color": "d73a4a",
+    "default": true,
+    "description": "Something isn't working",
+    "archived_at": null
+  },
+  {
+    "id": 8760397099,
+    "node_id": "LA_kwDOHj6BPs8AAAACCikNKw",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/cla-signed",
+    "name": "cla-signed",
+    "color": "2a293c",
+    "default": false,
+    "description": "",
+    "archived_at": null
+  },
+  {
+    "id": 4268560045,
+    "node_id": "LA_kwDOHj6BPs7-bQ6t",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/documentation",
+    "name": "documentation",
+    "color": "0075ca",
+    "default": true,
+    "description": "Improvements or additions to documentation",
+    "archived_at": null
+  },
+  {
+    "id": 4268560046,
+    "node_id": "LA_kwDOHj6BPs7-bQ6u",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/duplicate",
+    "name": "duplicate",
+    "color": "cfd3d7",
+    "default": true,
+    "description": "This issue or pull request already exists",
+    "archived_at": null
+  },
+  {
+    "id": 4268560047,
+    "node_id": "LA_kwDOHj6BPs7-bQ6v",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/enhancement",
+    "name": "enhancement",
+    "color": "a2eeef",
+    "default": true,
+    "description": "New feature or request",
+    "archived_at": null
+  },
+  {
+    "id": 4268560049,
+    "node_id": "LA_kwDOHj6BPs7-bQ6x",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/good%20first%20issue",
+    "name": "good first issue",
+    "color": "7057ff",
+    "default": true,
+    "description": "Good for newcomers",
+    "archived_at": null
+  },
+  {
+    "id": 4268560048,
+    "node_id": "LA_kwDOHj6BPs7-bQ6w",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/help%20wanted",
+    "name": "help wanted",
+    "color": "008672",
+    "default": true,
+    "description": "Extra attention is needed",
+    "archived_at": null
+  },
+  {
+    "id": 4268560050,
+    "node_id": "LA_kwDOHj6BPs7-bQ6y",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/invalid",
+    "name": "invalid",
+    "color": "e4e669",
+    "default": true,
+    "description": "This doesn't seem right",
+    "archived_at": null
+  },
+  {
+    "id": 4268560051,
+    "node_id": "LA_kwDOHj6BPs7-bQ6z",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/question",
+    "name": "question",
+    "color": "d876e3",
+    "default": true,
+    "description": "Further information is requested",
+    "archived_at": null
+  },
+  {
+    "id": 4268560052,
+    "node_id": "LA_kwDOHj6BPs7-bQ60",
+    "url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/labels/wontfix",
+    "name": "wontfix",
+    "color": "ffffff",
+    "default": true,
+    "description": "This will not be worked on",
+    "archived_at": null
+  }
+]

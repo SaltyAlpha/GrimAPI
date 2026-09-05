@@ -1,0 +1,16 @@
+{
+  "source_records": 37,
+  "target_records": 39,
+  "native_prs": 30,
+  "missing": [],
+  "incorrect_titles": [],
+  "incorrect_states": [],
+  "discussion_repairs": [],
+  "fallbacks": [
+    22
+  ],
+  "placeholders": [
+    28,
+    29
+  ]
+}

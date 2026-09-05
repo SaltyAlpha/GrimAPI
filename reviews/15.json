@@ -1,0 +1,42 @@
+[
+  {
+    "id": 2948402216,
+    "node_id": "PRR_kwDOHj6BPs6vvQwo",
+    "user": {
+      "login": "ManInMyVan",
+      "id": 113963219,
+      "node_id": "U_kgDOBsrw0w",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113963219?u=ece4874d27c027e23612f26504feec3b82a3742b&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ManInMyVan",
+      "html_url": "https://github.com/ManInMyVan",
+      "followers_url": "https://api.github.com/users/ManInMyVan/followers",
+      "following_url": "https://api.github.com/users/ManInMyVan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ManInMyVan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ManInMyVan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ManInMyVan/subscriptions",
+      "organizations_url": "https://api.github.com/users/ManInMyVan/orgs",
+      "repos_url": "https://api.github.com/users/ManInMyVan/repos",
+      "events_url": "https://api.github.com/users/ManInMyVan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ManInMyVan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/15#pullrequestreview-2948402216",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/15",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/15#pullrequestreview-2948402216"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/15"
+      }
+    },
+    "submitted_at": "2025-06-23T00:25:42Z",
+    "commit_id": "e13ffc40edcb41c9d660ae3e47d19bb6c6b8a171"
+  }
+]

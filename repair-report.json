@@ -1,0 +1,18 @@
+{
+  "repaired": [
+    22,
+    35
+  ],
+  "fallbacks": [
+    {
+      "number": 22,
+      "reason": "{\"message\":\"Validation Failed\",\"errors\":[{\"resource\":\"PullRequest\",\"field\":\"head\",\"code\":\"invalid\"}],\"documentation_url\":\"https://docs.github.com/rest/pulls/pulls#create-a-pull-request\",\"status\":\"422\"}",
+      "historical_attempt": "{\"message\":\"Object does not exist\",\"documentation_url\":\"https://docs.github.com/rest/git/refs#create-a-reference\",\"status\":\"422\"}"
+    }
+  ],
+  "missing": [],
+  "placeholders": [
+    28,
+    29
+  ]
+}

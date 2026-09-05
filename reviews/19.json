@@ -1,0 +1,42 @@
+[
+  {
+    "id": 4114199251,
+    "node_id": "PRR_kwDOHj6BPs71ObLT",
+    "user": {
+      "login": "Axionize",
+      "id": 154778082,
+      "node_id": "U_kgDOCTm54g",
+      "avatar_url": "https://avatars.githubusercontent.com/u/154778082?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Axionize",
+      "html_url": "https://github.com/Axionize",
+      "followers_url": "https://api.github.com/users/Axionize/followers",
+      "following_url": "https://api.github.com/users/Axionize/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Axionize/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Axionize/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Axionize/subscriptions",
+      "organizations_url": "https://api.github.com/users/Axionize/orgs",
+      "repos_url": "https://api.github.com/users/Axionize/repos",
+      "events_url": "https://api.github.com/users/Axionize/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Axionize/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/GrimAnticheat/GrimAPI/pull/19#pullrequestreview-4114199251",
+    "pull_request_url": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/19",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/GrimAnticheat/GrimAPI/pull/19#pullrequestreview-4114199251"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/GrimAnticheat/GrimAPI/pulls/19"
+      }
+    },
+    "submitted_at": "2026-04-15T14:00:41Z",
+    "commit_id": "a092674f06784ad2d5c4cd306f5018a05453f67c"
+  }
+]
