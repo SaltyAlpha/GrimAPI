@@ -213,7 +213,7 @@ public final class HistoryServiceImpl implements HistoryService {
                 long violationCount = countsById.getOrDefault(s.sessionId(), 0L);
                 CompletionStage<Long> uniqueStage = uniqueStages[i];
                 all = all.thenCombine(uniqueStage, (v, unique) -> {
-                    out[slot] = toSummary(s, startups.get(s.startupId()), ordinal, violationCount, unique.intValue());
+                    out[slot] = toSummary(s, startupFor(s, startups), ordinal, violationCount, unique.intValue());
                     return null;
                 });
             }
@@ -238,9 +238,18 @@ public final class HistoryServiceImpl implements HistoryService {
             chain = chain.thenCompose(v -> store.countViolationsInSession(s.sessionId())
                     .thenCompose(count -> store.countUniqueChecksInSession(s.sessionId())
                             .thenAccept(unique -> out[slot] =
-                                    toSummary(s, startups.get(s.startupId()), ordinal, count, unique.intValue()))));
+                                    toSummary(s, startupFor(s, startups), ordinal, count, unique.intValue()))));
         }
         return chain.thenApply(v -> new Page<>(List.of(out), nextCursor));
+    }
+
+    private static @Nullable ServerStartupRecord startupFor(
+            SessionRecord session, Map<UUID, ServerStartupRecord> startups) {
+        // Legacy sessions can lack a startup ID. When startup resolution is
+        // disabled, the empty immutable map rejects null keys rather than
+        // returning null; retain the session's own metadata in this case.
+        UUID startupId = session.startupId();
+        return startupId == null ? null : startups.get(startupId);
     }
 
     private SessionSummary toSummary(
